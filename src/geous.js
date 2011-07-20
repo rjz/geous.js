@@ -152,7 +152,7 @@ geous.Address = function( address ){
 	this.region = '';
 	this.country = '';
 	
-	geous.init( this, o );
+	geous.init( this, address );
 }
 
 /**
