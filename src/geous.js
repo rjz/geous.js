@@ -204,7 +204,12 @@ geous.lazyLoader = function( options ) {
 		var f;
 		var i = 0;
 
-		if( typeof( callback ) === 'function' ) {
+		if( typeof o.init == 'function') {
+			o.init();
+			o.init = null;
+		}
+
+		if( typeof callback == 'function' ) {
 			callbacks.push( callback );
 		}
 
@@ -215,15 +220,13 @@ geous.lazyLoader = function( options ) {
 			}
 
 			geous[options.target] = function( callback ) {
-				if( typeof(callback) === 'function' ) return callback(); 
+				if( typeof callback == 'function' ) return callback(); 
 				return true;
 			}
 		}
 		
 		return false;
 	}
-
-	o.init();
 
 	return geous[options.target];
 }
@@ -235,7 +238,7 @@ geous.lazyLoader({
 	target: 'withLocation',
 	init: function(){
 		var script;
-		if( typeof geo_position_js === 'undefined' ) {
+		if( typeof geo_position_js == 'undefined' ) {
 			script = document.createElement('script');
 			script.onreadystatechange= function () {
 				if (this.readyState == 'complete') geous.withLocation();
@@ -246,7 +249,7 @@ geous.lazyLoader({
 		}
 	},
 	test: function() {
-		return ( typeof geo_position_js !== 'undefined' );
+		return ( typeof geo_position_js != 'undefined' );
 	}
 });
 
@@ -264,9 +267,9 @@ geous.lazyLoader({
 		}
 	},
 	test: function() {
-		return	typeof google !== 'undefined' && 
-				typeof google.maps !== 'undefined' &&
-				typeof google.maps.LatLng !== 'undefined';
+		return	typeof google != 'undefined' && 
+				typeof google.maps != 'undefined' &&
+				typeof google.maps.LatLng != 'undefined';
 	}
 });
 
