@@ -31,10 +31,20 @@ geous.js uses the Google Maps API and [geo_location.js](http://code.google.com/p
 
 In addition, geous.js provides helper methods for geocoding address and lat/lng data and classes for storing and transforming the location and address information returned by Google&rsquo;s v3 Maps API.
 
-Compiling with Closure Compiler
--------------------------------
+Reference
+---------
 
-As of v0.2.0, geous.js may be compiled using [Closure Compiler]. 
+Complete documentation of geous is available [here](http://rjzaworski.com/projects/geous)
+
+Demo
+----
+
+See geous at work [here](http://rjzaworski.com/projects/geous/demo.html)
+
+Notes on compiling with Closure Compiler
+----------------------------------------
+
+As of v0.2.0, geous.js may be compiled using [Closure Compiler](http://code.google.com/closure/compiler/). 
 
 To compile with Closure, include the [Maps API extern definitions](http://closure-compiler.googlecode.com/svn/trunk/contrib/externs/maps/google_maps_api_v3_5.js) in `externs_url` and define the following symbols from geo_location.js in `js_externs`:
 
