@@ -21,7 +21,7 @@ Note that a call to any of the geous functions will immediately trigger any depe
 Overview
 --------
 
-geous.js uses the Google Maps API and [geo_location.js](http://code.google.com/p/geo-location-javascript/) to determine the current user&rsquo;s location and convert it (if possible) into a human-friendly address. Two helper methods are used to queue functions for execution as soon as the Maps API and user location are available. They are:
+geous.js uses the [Google Maps API](http://code.google.com/apis/maps/documentation/javascript/) and [geo_location.js](http://code.google.com/p/geo-location-javascript/) to determine the current user&rsquo;s location and convert it (if possible) into a human-friendly address. Two helper methods are used to queue functions for execution as soon as the Maps API and user location are available. They are:
 
 * **geous.withLocation**, defer functions until the user&rsquo;s location is available
 

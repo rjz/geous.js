@@ -21,6 +21,7 @@ var geous = new function(){
 		 *	Temporarily defer functions' execution
 		 *
 		 *	@see	http://blog.rjzaworski.com/2011/07/microloader-for-asynchronous-scripts
+		 *	@private
 		 *	@param	{Object}
 		 *	@return {Function}
 		 */
@@ -51,7 +52,55 @@ var geous = new function(){
 				
 				return false;
 			}
+		},
+		/**
+		 *	@type	{Object}
+		 */
+		listeners = {},
+		/**
+		 *	Fires an event
+		 *	@private
+		 *	@param	{String}    event       event name
+		 *	@param	{Object=}	parameters  event parameters
+		 */
+		triggerEvent = function( id, event ){
+
+			var callback, 
+				i = 0;
+
+			if( !(listeners[id] instanceof Array) ) {
+				return;
+			}
+
+			while( callback = listeners[id][i++] ) {
+				callback(event);
+			}
 		};
+
+	/**
+	 *	Add an event listener
+	 *	@param	{String}    event     the event to listen for
+	 *	@param	{Function}  callback  the callback to use
+	 */
+	this.addEventListener = function(id, callback ) {
+
+		var i = 0,
+			listener;
+		
+		if( !(listeners[id] instanceof Array) ) {
+			listeners[id] = [];	
+		}
+		
+		// make sure listener hasn't been added already
+		while( listener = listeners[id][i++] ) {	
+			if( listener === callback ) {
+				return false;	
+			}
+		}
+		
+		listeners[id].push( callback );
+	};
+
 	/**
 	 *	Shallow-copy user-specified parameters over object
 	 *	@memberOf	geous
@@ -135,11 +184,17 @@ var geous = new function(){
 				if(typeof callback == 'function' ) callback( location );
 			}
 			else {
-				// handle failed geocode() request
+				triggerEvent('error',new geous.Event({
+					code: geous.Error.GEOCODE,
+					status:'Geocoding request failed'
+				}));
 			}
 		});
 	}
-	
+
+	/**
+	 *	@type	{Geous.Location}
+	 */
 	this.Me = null;
 
 	/**
@@ -200,7 +255,10 @@ var geous = new function(){
 		test: function() {
 			
 			var error = function( e ) {
-					// handle failed getCurrentPosition() request
+					triggerEvent('error',new geous.Event({
+						code: geous.Error.USER_POSITION,
+						status:'Position request failed'
+					}));
 				},
 				success = function( p ) {
 					var loc = new geous.Location(p.coords);
@@ -223,7 +281,11 @@ var geous = new function(){
 					if(geo_position_js.init()) {
 						geo_position_js.getCurrentPosition(success, error);
 					} else {
-						// handle no access to geolocation.
+
+						triggerEvent('error',new geous.Event({
+							code: geous.Error.GEOLOCATION,
+							status:'Geolocation library unavailable'
+						}));
 					}
 				}
 			}
@@ -232,20 +294,6 @@ var geous = new function(){
 		}
 	});
 }
-
-/** Export symbols for Closure Compiler: **/
-window['geous'] = geous;
-
-geous['Me'] = geous.Me;
-
-// helpers
-geous['fromGeocoderResultToLocation'] = geous.fromGeocoderResultToLocation;
-geous['geocode'] = geous.geocode;
-	  
-// methods
-geous['withMaps'] = geous.withMaps;
-geous['withLocation'] = geous.withLocation;
-geous['withMe'] = geous.withMe;
 
 /**
  *	Standard class for holding geous addresses.
@@ -277,9 +325,34 @@ geous.Address.prototype.toString = function() {
 	return this.street + ' ' + this.locality + ', ' + this.region + ' ' + this.country;
 }
 
-/** Export symbols for Closure Compiler: **/
-geous['Address'] = geous.Address;
-geous.Address['toString'] = geous.Address.prototype.toString;
+/**
+ *	@constructor
+ *	@property   {Number}	code
+ *	@property   {String}	message
+ */
+geous.Event = function( error ) {
+	this.code = 0;
+	this.status = '';
+
+	geous.init( this, error );
+}
+
+/**
+ *	Convert this error into a human-friendly string
+ *	@override
+ */
+geous.Event.prototype.toString = function() {
+	return this.status;	
+}
+
+/**
+ *	@enum
+ */
+geous.Error = {
+	GEOCODE: 1,
+	GEOLOCATION: 2,
+	USER_POSITION: 3
+}
 
 /**
  *	Standard class for holding geous locations
@@ -307,5 +380,22 @@ geous.Location.prototype.toLatLng = function() {
 }
 
 /** Export symbols for Closure Compiler: **/
+window['geous'] = geous;
+geous['Me'] = geous.Me;
+geous['addEventListener'] = geous.addEventListener;
+geous['fromGeocoderResultToLocation'] = geous.fromGeocoderResultToLocation;
+geous['geocode'] = geous.geocode;
+geous['withMaps'] = geous.withMaps;
+geous['withLocation'] = geous.withLocation;
+geous['withMe'] = geous.withMe;
+
+geous['Address'] = geous.Address;
+geous.Address['toString'] = geous.Address.prototype.toString;
+
+geous['Error'] = geous.Error
+
+geous['Event'] = geous.Event
+geous.Event['toString'] = geous.Event.prototype.toString;
+
 geous['Location'] = geous.Location;
 geous.Location['toLatLng'] = geous.Location.prototype.toLatLng;
