@@ -379,6 +379,143 @@ geous.Location.prototype.toLatLng = function() {
 	return new google.maps.LatLng( this.latitude, this.longitude );	
 }
 
+/**
+ *	@namespace
+ */
+geous.compute = new function(){
+
+	var 
+		/**
+		 *	An array of hashes containing compass headings and their maximum bearings
+		 *	@type	{Array}
+		 */
+		_headings = [
+			{name: 'N',   max:11.25},
+			{name: 'NNE', max:33.75},
+			{name: 'NE',  max:56.25},
+			{name: 'ENE', max:78.75},
+			{name: 'E',   max:101.25},
+			{name: 'ESE', max:123.75},
+			{name: 'SE',  max:146.25},
+			{name: 'SSE', max:168.75},
+			{name: 'S',   max:191.25},
+			{name: 'SSW', max:213.75},
+			{name: 'SW',  max:236.25},
+			{name: 'WSW', max:258.75},
+			{name: 'W',   max:281.25},
+			{name: 'WNW', max:303.75},
+			{name: 'NW',  max:326.25},
+			{name: 'NNW', max:348.75},
+			{name: 'N',   max:360}
+		],
+		/**
+		 *	Convert radians to degrees
+		 *	@private
+		 *	@param	{Number}	radians	the angle in radians
+		 *	@return	{Number}	the angle in degrees
+		 */
+		_toDeg = function (radians) {
+			return radians * 180 / Math.PI;
+		},
+		/**
+		 *	Return a lat/lng hash
+		 *	@private
+		 *	@param	{google.maps.LatLng|geous.Location}	p	The location to convert
+		 *	@return	{Object}
+		 */
+		_toLatLng = function (p) {
+
+			if (p instanceof geous.Location) {
+				
+				return {
+					lat: p.latitude,
+					lng: p.longitude
+				}
+			} else {
+
+				return { // google maps
+					lat: p.lat(),
+					lng: p.lng()
+				}
+			}
+		},
+		/**
+		 *	Convert degrees to radians
+		 *	@private
+		 *	@param	{Number}	degrees	the angle in degrees
+		 *	@return	{Number}	the angle in radians
+		 */
+		_toRad = function (degrees) {
+			return degrees * Math.PI / 180;
+		};
+
+		/**
+		 *	Compute distance between two points using Haversine Formula
+		 *
+		 *	@see	http://en.wikipedia.org/wiki/Haversine_formula
+		 *
+		 *	@param	{google.maps.LatLng|geous.Location}	p1	The location from
+		 *	@param	{google.maps.LatLng|geous.Location}	p2	The location to
+		 *	@return	{Number}	distance in km
+		 */
+		this.distanceBetween = function (p1, p2) {
+
+			var p1 = _toLatLng(p1),
+				p2 = _toLatLng(p2),
+				d_lat = _toRad(p2.lat-p1.lat),
+				d_lng = _toRad(p2.lng-p1.lng),
+				lat1 = _toRad(p1.lat),
+				lat2 = _toRad(p2.lat),
+				a = Math.sin(d_lat/2) * Math.sin(d_lat/2) + Math.sin(d_lng/2) * Math.sin(d_lng/2) * Math.cos(p1.lat) * Math.cos(p2.lat),
+				c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+
+			return 6371 * c;
+		},
+		/**
+		 *	Compute initial bearing between two points
+		 *
+		 *	@param	{google.maps.LatLng|geous.Location}	p1	The location from
+		 *	@param	{google.maps.LatLng|geous.Location}	p2	The location to
+		 *	@return	{Number}	bearing in degrees
+		 */
+		this.initialBearing = function (p1, p2) {
+
+			var p1 = _toLatLng(p1),
+				p2 = _toLatLng(p2),
+				d_lng = _toRad(p2.lng-p1.lng),
+				lat1 = _toRad(p1.lat),
+				lat2 = _toRad(p2.lat),
+				x = Math.cos(lat1)*Math.sin(lat2) - Math.sin(lat1)*Math.cos(lat2) * Math.cos(d_lng),
+				y = Math.sin(d_lng) * Math.cos(lat2)
+				
+			return _toDeg( Math.atan2(y, x));
+		},
+		/**
+		 *	Compute compass heading between two points
+		 *
+		 *	@methodof geous.compute.prototype
+		 *	@param	{google.maps.LatLng|geous.Location}	p1	The location from
+		 *	@param	{google.maps.LatLng|geous.Location}	p2	The location to
+		 *	@return	{String}	the compass point
+		 */
+		this.compass = function (p1, p2) {
+
+			var bearing = this.initialBearing(p1,p2) % 360,
+				h,
+				i = 0;
+
+			if (bearing < 0) {
+				bearing += 360;
+			}
+
+			while (h = _headings[++i]) {
+				if( h.max > bearing ) {
+					return h.name;
+				}
+			}
+		}
+};
+
 /** Export symbols for Closure Compiler: **/
 window['geous'] = geous;
 geous['Me'] = geous.Me;
@@ -398,4 +535,9 @@ geous['Event'] = geous.Event
 geous.Event['toString'] = geous.Event.prototype.toString;
 
 geous['Location'] = geous.Location;
-geous.Location['toLatLng'] = geous.Location.prototype.toLatLng;
+geous.Location.prototype['toLatLng'] = geous.Location.prototype.toLatLng;
+
+geous['compute'] = geous.compute;
+geous.compute['distanceBetween'] = geous.compute.distanceBetween;
+geous.compute['initialBearing'] = geous.compute.initialBearing;
+geous.compute['compass'] = geous.compute.compass;
