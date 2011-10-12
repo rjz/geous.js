@@ -6,7 +6,7 @@
  *	geocoding tasks.
  *
  *	@author     RJ Zaworski <rj@rjzaworski.com>
- *	@version	0.2.0
+ *	@version    0.2.2
  *	@license    JSON License <http://www.json.org/license.html>
  */
 //--------------------------------------------------------------------------------------------
@@ -390,23 +390,23 @@ geous.compute = new function(){
 		 *	@type	{Array}
 		 */
 		_headings = [
-			{name: 'N',   max:11.25},
-			{name: 'NNE', max:33.75},
-			{name: 'NE',  max:56.25},
-			{name: 'ENE', max:78.75},
-			{name: 'E',   max:101.25},
-			{name: 'ESE', max:123.75},
-			{name: 'SE',  max:146.25},
-			{name: 'SSE', max:168.75},
-			{name: 'S',   max:191.25},
-			{name: 'SSW', max:213.75},
-			{name: 'SW',  max:236.25},
-			{name: 'WSW', max:258.75},
-			{name: 'W',   max:281.25},
-			{name: 'WNW', max:303.75},
-			{name: 'NW',  max:326.25},
-			{name: 'NNW', max:348.75},
-			{name: 'N',   max:360}
+			{name: 'N',   longName: 'North',              max: 11.25 },
+			{name: 'NNE', longName: 'North by Northeast', max: 33.75 },
+			{name: 'NE',  longName: 'Northeast',          max: 56.25 },
+			{name: 'ENE', longName: 'East by Northeast',  max: 78.75 },
+			{name: 'E',   longName: 'East',               max: 101.25 },
+			{name: 'ESE', longName: 'East by Southeast',  max: 123.75 },
+			{name: 'SE',  longName: 'Southeast',          max: 146.25 },
+			{name: 'SSE', longName: 'South by Southeast', max: 168.75 },
+			{name: 'S',   longName: 'South',              max: 191.25 },
+			{name: 'SSW', longName: 'South by Southwest', max: 213.75 },
+			{name: 'SW',  longName: 'Southwest',          max: 236.25 },
+			{name: 'WSW', longName: 'West by Southwest',  max: 258.75 },
+			{name: 'W',   longName: 'West',               max: 281.25 },
+			{name: 'WNW', longName: 'West by Northwest',  max: 303.75 },
+			{name: 'NW',  longName: 'Northwest',          max: 326.25 },
+			{name: 'NNW', longName: 'North by Northwest', max: 348.75 },
+			{name: 'N',   longName: 'North',              max: 360 }
 		],
 		/**
 		 *	Convert radians to degrees
@@ -498,7 +498,7 @@ geous.compute = new function(){
 		 *	@param	{google.maps.LatLng|geous.Location}	p2	The location to
 		 *	@return	{String}	the compass point
 		 */
-		this.compass = function (p1, p2) {
+		this.compassHeading = function (p1, p2, useLong) {
 
 			var bearing = this.initialBearing(p1,p2) % 360,
 				h,
@@ -510,7 +510,7 @@ geous.compute = new function(){
 
 			while (h = _headings[++i]) {
 				if( h.max > bearing ) {
-					return h.name;
+					return useLong ? h.longName : h.name;
 				}
 			}
 		}
@@ -540,4 +540,4 @@ geous.Location.prototype['toLatLng'] = geous.Location.prototype.toLatLng;
 geous['compute'] = geous.compute;
 geous.compute['distanceBetween'] = geous.compute.distanceBetween;
 geous.compute['initialBearing'] = geous.compute.initialBearing;
-geous.compute['compass'] = geous.compute.compass;
+geous.compute['compassHeading'] = geous.compute.compassHeading;
