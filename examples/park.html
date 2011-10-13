@@ -93,10 +93,10 @@ var app = new function() {
 			if (opts.saved) {
 
 				var bearing = geous.compute.compassHeading(geous.Me.toLatLng(),opts.storedLocation),
-					km = Math.round(geous.compute.distanceBetween(geous.Me.toLatLng(),opts.storedLocation)),
+					km = Math.round(100 * geous.compute.distanceBetween(geous.Me.toLatLng(),opts.storedLocation)) / 100,
 					info;
 
-				if (km < 10) {
+				if (km < 0.01) {
 					info = 'At destination';
 				} else if (km < 100) { 
 					info = (1000 * km) + 'm ' + bearing;

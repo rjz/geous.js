@@ -1,10 +1,55 @@
 <html>
 <head>
+	<title>Finding Beervana</title>
+<!--
+Escape from the Wilderness
+==========================
+
+If you're looking for something, it's really useful to know where you are--and the geolocation API provided by HTML5 is a great way to find out. Using [Geous.js](http://rjzaworski.com/projects/geous) to handle the heavy lifting, we'll find a way out of here in no time.
+
+	<script src="https://raw.github.com/rjz/geous.js/master/src/geous.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+	<script>
+	function compass(destination) {
+
+		var me = geous.Me,
+			heading,
+			distance;
+
+		heading = geous.compute.compassHeading(me, destination);
+		distance = geous.compute.distanceBetween(me, destination);
+		
+		return Math.round(distance*10)/10 + 'km ' + heading;
+	}
+	
+	function init() {
+
+		var beervana = new google.maps.LatLng(45.521744, -122.695313);		
+		alert( 'Beervana is ' + compass(beervana));
+	}
+	
+	geous.withMe( init );
+	</script>
+
+Get that? First, we defined a `compass` function that uses Geous to compute the distance and heading between us and our destination--Portland, aka the Rose City, aka Beervana. This process takes advantage of two built-in functions:
+
+* `geous.compute.compass` returns a heading (e.g., 'NW' or 'SSW') in string form
+* `geous.compute.distanceBetween` returns the distance between two points in kilometers
+
+We've kept it pretty simple here, but we could also use `geous.compute.initialBearing` to tie a more precise heading into the compass's readout. We could even convert the distance (currently in km) to local miles if we needed to--but Portland's a pretty hip place, so we won't bother.
+
+Next, we created an `init` function that will be called as soon as Geous is ready to go (that's the `withMe` part in the last line). `init` calls `compass`, and the rest, as they say, will speak for itself.
+
+You can see a Geous compass in action at the [Portland Beer Compass]() demo. Or, [download the example project](...) from github
+-->
 
 <style>
 body { 
-	background-color:#f2eeeb; 
+	background:#dee3c5;
+/*	background-color:#f2eeeb;
+/*	background-color:#8ca0b1;*/
 	font:normal 8pt copse, serif;
+	padding-bottom:40px;
 }
 a:link, a:visited {
 	color:#9093CE;
@@ -17,7 +62,7 @@ a:link, a:visited {
 	margin:20px 0;
 }
 .buck-up {
-	font-size:26pt;
+	font-size:22pt;
 }
 .buck-up strong {
 	text-transform:uppercase;
@@ -47,13 +92,22 @@ a:link, a:visited {
 .distance {
 	font:normal 40pt copse, arial;
 }
+.sharethis {
+	position:fixed;
+	bottom:30px;
+	right:50px;
+}
 </style>
 </head>
 <body>
         <div class="container">
 			<p class="compass"></p>
-			<p>Powered by <a href="blog.rjzaworski.com/2011/09/geous-js-geolocation-made-easy/">Geous</a></p>
+			<img src="http://farm7.static.flickr.com/6032/6238396490_38b2ac63e0_m_d.jpg" alt="" />
+			<p>Beer Compass powered by <a href="http://blog.rjzaworski.com/2011/09/geous-js-geolocation-made-easy/">Geous</a> &middot; <a href="http://">View Source</a></p>
         </div><!--.container -->
+	<div class="sharethis">
+	<span  class='st_twitter_vcount' displayText='Tweet'></span><span  class='st_plusone_vcount' ></span><span  class='st_fblike_vcount' ></span>
+	</div>
 <script src="../src/geous.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
 <script>
@@ -63,10 +117,16 @@ a:link, a:visited {
 		var me = geous.Me,
 			heading,
 			distance,
-			_digits = function(num) {
+			_digits = function (num) {
 				num = num.toString();
 				return num.replace(/([0-9])/g,'<span class="digit">$1</span>');
-			};
+			},
+			_random = function (arr) {
+				var index = Math.floor(Math.random() * arr.length);
+				return arr[index];
+			},
+			_nouns = ['friend','comrade','ol\' chap','pilgrim','neighbor'],
+			_verbs = ['walking','pedalling','heading'];
 
 		heading = geous.compute.compassHeading(me, destination, true);
 		distance = geous.compute.distanceBetween(me, destination);
@@ -74,7 +134,7 @@ a:link, a:visited {
 		if (distance < 10) {
 			return 'You\'re made it, mate!';
 		} else {
-			return '<span class="buck-up">Keep walking <strong>' + heading + '</strong>, soldier&mdash;</span><span class="distance">' + _digits(Math.round(distance*10)/10) + '</span>km<span class="remaining">left between you and a decent beer.</span>';
+			return '<span class="buck-up">Keep '+_random(_verbs)+' <strong>' + heading + '</strong>, ' + _random(_nouns) + '&mdash;</span><span class="distance">' + _digits(Math.round(distance*10)/10) + '</span>km<span class="remaining">left to go.</span>';
 		}
 	}
 	
@@ -83,11 +143,11 @@ a:link, a:visited {
 		var $ = jQuery;
 	
 		var beervana = new google.maps.LatLng(45.521744, -122.695313);		
-		$('.compass').html( compass(beervana) );
+		$('.compass').html(compass(beervana));
 	}
 	
 	geous.withMe( init );
 </script>
-
+<script type="text/javascript">var switchTo5x=true;</script><script type="text/javascript" src="http://w.sharethis.com/button/buttons.js"></script><script type="text/javascript">stLight.options({publisher:'f8db94a5-7212-4bb3-a77c-372fda0ef6a8'});</script>
 </body>
 </html>
