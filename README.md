@@ -3,6 +3,8 @@ geous.js
 
 **geous.js** is a library that simplifies geolocation and geocoding tasks.
 
+*28 Apr 2012: Geous remains a work in progress. Production environments should avoid linking directly to this version of Geous to avoid broken functionality in future releases*
+
 Quickstart
 ----------
 
