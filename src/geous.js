@@ -1,543 +1,577 @@
-/**
- *	geous.js
- *	http://rjzaworski.com/projects/geous
- *
- *	Utility-belt library for deferring, loading, and performing basic geolocation and 
- *	geocoding tasks.
- *
- *	@author     RJ Zaworski <rj@rjzaworski.com>
- *	@version    0.2.2
- *	@license    JSON License <http://www.json.org/license.html>
- */
-//--------------------------------------------------------------------------------------------
-/**
- *	@namespace
- */
-var geous = new function(){
+/*
+Predicated on the assumptions that both users and geocoding services know what they're doing. 
 
-	var self = this,
-	
-		/**
-		 *	Temporarily defer functions' execution
+Release notes:
+
+If you are using a previous version of geous, this release **will** break it
+
+- HTML5's location API has replaced `geo_location.js` for obtaining client locations
+- The newly decoupled service providers will no longer be loaded aæutomatically
+- geous.on` and `geous.trigger` replace the `addEventListener` and `triggerEvent` methods, respectively
+
+*/
+;
+var geous = new function() {
+
+	'use strict';
+
+	var /**
+		 *	Default options. Any key/value described here may be overwritteæn by 
+		 *	passing an `options` hash to `geous.init()`
 		 *
-		 *	@see	http://blog.rjzaworski.com/2011/07/microloader-for-asynchronous-scripts
 		 *	@private
-		 *	@param	{Object}
-		 *	@return {Function}
 		 */
-		loaderFactory = function( options ) {
-		
-			var callbacks = [],
-				o = options;
-	
-			return function( callback ) {
-		
-				var f_ptr;
+		_defaults = {
 
-				if( typeof o.init == 'function') {
-					o.init();
-					o.init = null;
-				}
-	
-				if( typeof callback == 'function' ) {
-					callbacks.push( callback );
-				}
-	
-				if(o.test()) {
-					while( f_ptr = callbacks.pop() ) { 
-						f_ptr(); 
-					}
-					return true;
-				}
-				
-				return false;
-			}
-		},
-		/**
-		 *	@type	{Object}
-		 */
-		listeners = {},
-		/**
-		 *	Fires an event
-		 *	@private
-		 *	@param	{String}    event       event name
-		 *	@param	{Object=}	parameters  event parameters
-		 */
-		triggerEvent = function( id, event ){
+			/**
+			 *	Should the geocoder cache results? Setting this option will not
+			 *	force results to beŒæ cached, but will at least make the cache
+			 *	available.
+			 */
+			useCache: true,
 
-			var callback, 
-				i = 0;
+			/**
+			 *	localStorage adapter. Override this as needed to provide persistence
+			 *	with databases, socket connections, etc.
+			 */
+			cacheAdapter: {
 
-			if( !(listeners[id] instanceof Array) ) {
-				return;
-			}
+				store:localStorage,
 
-			while( callback = listeners[id][i++] ) {
-				callback(event);
-			}
-		};
-
-	/**
-	 *	Add an event listener
-	 *	@param	{String}    event     the event to listen for
-	 *	@param	{Function}  callback  the callback to use
-	 */
-	this.addEventListener = function(id, callback ) {
-
-		var i = 0,
-			listener;
-		
-		if( !(listeners[id] instanceof Array) ) {
-			listeners[id] = [];	
-		}
-		
-		// make sure listener hasn't been added already
-		while( listener = listeners[id][i++] ) {	
-			if( listener === callback ) {
-				return false;	
-			}
-		}
-		
-		listeners[id].push( callback );
-	};
-
-	/**
-	 *	Shallow-copy user-specified parameters over object
-	 *	@memberOf	geous
-	 *	@param	{Object}	obj	definition of the object
-	 *	@param	{Object}	params	the object's user-specified parameters
-	 */
-	this.init = function( obj, params ) {
-		if( params ) {
-			for(x in obj) {
-				if( params[x] && x != 'toString' ) {
-					if( typeof obj[x] === typeof params[x] ) {
-						obj[x] = params[x];	
-					}
-				}
-			}
-		}		
-	}
-
-	/**
-	 *	Convert a google GeocoderResult object into a {@link geous.Location}
-	 *
-	 *	@param	{google.maps.GeocoderResult}	result	the response from Google's Geocoding API
-	 *	@returns	{geous.Location}
-	 */
-	this.fromGeocoderResultToLocation = function( result ) {
-	
-		var address,
-			component,
-			loc = new geous.Location();
-		
-		if( result && result.address_components ) {
-		
-			// support instantiation with geocoder results
-			loc.latitude = result.geometry.location.lat();
-			loc.longitude = result.geometry.location.lng();
-		
-			address = result.address_components;
-		
-			for(x in address ) {
-		
-				component = address[x];	// get current component
-	
-				if( component.types.indexOf('street_address') > -1 ) {
-					loc.address.street = component.long_name;
-				} else if( component.types.indexOf('locality') > -1 ) {
-					loc.address.locality = component.long_name;
-				} else if( component.types.indexOf('administrative_area_level_1') > -1 ) { 
-					loc.address.region = component.long_name;
-				} else if( component.types.indexOf('country') > -1) {
-					loc.address.country = component.long_name;
-				}
-			}
-		}
-		
-		return loc;
-	}
-	
-	/**
-	 *	Submit a request to google's Geocoding API
-	 *
-	 *	@param	{google.maps.LatLng|geous.Address|String}	request	the address or latlng to be geocoded
-	 *	@param	{function}	callback	the function to be called following a successful geocoding request
-	 */
-	this.geocode = function( request, callback ) {
-	
-		var gc = new google.maps.Geocoder();
-	
-		if( request instanceof google.maps.LatLng ) {
-			request = { 'location' : request }	
-		} else if( request instanceof geous.Address ) {
-			request = { 'address' : request.toString() }
-		} else if( request instanceof String ) {
-			request = { 'address' : request }
-		}
-	
-		gc.geocode( request, function(result, status) {
-			var location;
-			
-			if( status === google.maps.GeocoderStatus.OK ) {
-				location = geous.fromGeocoderResultToLocation( result[0] );
-				if(typeof callback == 'function' ) callback( location );
-			}
-			else {
-				triggerEvent('error',new geous.Event({
-					code: geous.Error.GEOCODE,
-					status:'Geocoding request failed'
-				}));
-			}
-		});
-	}
-
-	/**
-	 *	@type	{Geous.Location}
-	 */
-	this.Me = null;
-
-	/**
-	 *	Defer a function's execution until the geolocation library has been loaded
-	 *	@param	{Function}	the callback to call once geolocation is available
-	 *	@return {boolean}	whether or not the location library is available
-	 */
-	this.withLocation = loaderFactory({
-		init: function(){
-			var script;
-
-			if( !this.test() ) {
-
-				script = document.createElement('script');
-				script.onreadystatechange= function () { // IE hack
-					if( script.readyState == 'complete' || script.readyState == 'loaded' ) self.withLocation();
-				}
-				script.onload = self.withLocation;
-				script.src = 'http://geo-location-javascript.googlecode.com/svn/trunk/js/geo-min.js';
-				document.body.appendChild(script);
-			}
-		},
-		test: function() {
-			return ( typeof geo_position_js != 'undefined' );
-		}
-	});
-
-	/**
-	 *	Defer a function's execution until the Google Maps API has been loaded
-	 *	@param	{Function}	the callback to call once the API is available
-	 *	@return {boolean}	whether or not the Maps API is available
-	 */
-	this.withMaps = loaderFactory({
-		init: function(){
-			var script;
-			if(!this.test()) {
-				script = document.createElement("script");
-				script.src = 'http://maps.google.com/maps/api/js?sensor=true&libraries=geometry&callback=geous.withMaps';
-				document.body.appendChild(script);	
-			}
-		},
-		test: function() {
-			return	typeof google != 'undefined' && 
-					typeof google.maps != 'undefined' &&
-					typeof google.maps.LatLng != 'undefined';
-		}
-	});
-
-	/**
-	 *	Defer a function until the local user's location has become available
-	 *	@param	{Function}	callback	the function to be called when geous.Me is available
-	 *	@return {boolean}	whether or the Me object is available
-	 */
-	this.withMe = loaderFactory({
-		init: function(){
-			this.timer = window.setInterval( self.withMe, 100 );
-		},
-		test: function() {
-			
-			var error = function( e ) {
-					triggerEvent('error',new geous.Event({
-						code: geous.Error.USER_POSITION,
-						status:'Position request failed'
-					}));
+				get: function (key) {
+					try {
+						return JSON.parse(this.store[key]);
+					} catch(e) {};
+					return undefined;
 				},
-				success = function( p ) {
-					var loc = new geous.Location(p.coords);
-					self.geocode(loc.toLatLng(), function(location) {
-						self['Me'] = location;
-						self.withMe();
-					});
-				};
-
-			if(self.withMaps() && self.withLocation()) {
-
-				if( self['Me'] ) {
-					return true; 
+				set: function (key, value) {
+					try {
+						this.store[key] = JSON.stringify(value);
+					} catch(e) {};
 				}
+			},
 
-				if(this.timer ) {
-					window.clearInterval(this.timer);
-					this.timer = null;
+			/**
+			 *	Should geocoder results be persiæsted using `cacheAdapter`?
+			 */
+			cachePersist: false,
 
-					if(geo_position_js.init()) {
-						geo_position_js.getCurrentPosition(success, error);
-					} else {
+			/**
+			 *	Prefix to use for cached values (e.g., `window.location`)
+			 */
+			cachePrefix: '',
 
-						triggerEvent('error',new geous.Event({
-							code: geous.Error.GEOLOCATION,
-							status:'Geolocation library unavailable'
-						}));
-					}
-				}
-			}
-
-			return false;
-		}
-	});
-}
-
-/**
- *	Standard class for holding geous addresses.
- *
- *	@see	http://code.google.com/apis/maps/documentation/javascript/reference.html#GeocoderResult
- *
- *	@constructor
- *	@property   {string}	street
- *	@property   {string}	locality    The town or city associated with this address
- *	@property   {string}	region      The state or province associated with this address
- *	@property   {string}	country
- *	@param      {geous.Address=} address An address to copy
- */
-geous.Address = function( address ){
-	
-	this.street = '';
-	this.locality = '';
-	this.region = '';
-	this.country = '';
-	
-	geous.init( this, address );
-}
-
-/**
- *	Convert this address into a human-friendly string
- *	@override
- */
-geous.Address.prototype.toString = function() {
-	return this.street + ' ' + this.locality + ', ' + this.region + ' ' + this.country;
-}
-
-/**
- *	@constructor
- *	@property   {Number}	code
- *	@property   {String}	message
- */
-geous.Event = function( error ) {
-	this.code = 0;
-	this.status = '';
-
-	geous.init( this, error );
-}
-
-/**
- *	Convert this error into a human-friendly string
- *	@override
- */
-geous.Event.prototype.toString = function() {
-	return this.status;	
-}
-
-/**
- *	@enum
- */
-geous.Error = {
-	GEOCODE: 1,
-	GEOLOCATION: 2,
-	USER_POSITION: 3
-}
-
-/**
- *	Standard class for holding geous locations
- *	@param	{geous.Location=}	location	an existing location to be copied
- *	@constructor
- *	@property	{number}	latitude	The latitude at this location
- *	@property	{number}	longitude	The longitude at this location
- *	@property	{geous.Address}	address	The address (if available) of this location
- */
-geous.Location = function( location ){
-
-	this.latitude = 0;
-	this.longitude = 0;
-	this.address = new geous.Address();
-
-	geous.init( this, location );
-}
-
-/**
- *	Convert the current location into a google.maps.LatLng object
- *	@returns	{google.maps.LatLng}
- */
-geous.Location.prototype.toLatLng = function() {
-	return new google.maps.LatLng( this.latitude, this.longitude );	
-}
-
-/**
- *	@namespace
- */
-geous.compute = new function(){
-
-	var 
-		/**
-		 *	An array of hashes containing compass headings and their maximum bearings
-		 *	@type	{Array}
-		 */
-		_headings = [
-			{name: 'N',   longName: 'North',              max: 11.25 },
-			{name: 'NNE', longName: 'North by Northeast', max: 33.75 },
-			{name: 'NE',  longName: 'Northeast',          max: 56.25 },
-			{name: 'ENE', longName: 'East by Northeast',  max: 78.75 },
-			{name: 'E',   longName: 'East',               max: 101.25 },
-			{name: 'ESE', longName: 'East by Southeast',  max: 123.75 },
-			{name: 'SE',  longName: 'Southeast',          max: 146.25 },
-			{name: 'SSE', longName: 'South by Southeast', max: 168.75 },
-			{name: 'S',   longName: 'South',              max: 191.25 },
-			{name: 'SSW', longName: 'South by Southwest', max: 213.75 },
-			{name: 'SW',  longName: 'Southwest',          max: 236.25 },
-			{name: 'WSW', longName: 'West by Southwest',  max: 258.75 },
-			{name: 'W',   longName: 'West',               max: 281.25 },
-			{name: 'WNW', longName: 'West by Northwest',  max: 303.75 },
-			{name: 'NW',  longName: 'Northwest',          max: 326.25 },
-			{name: 'NNW', longName: 'North by Northwest', max: 348.75 },
-			{name: 'N',   longName: 'North',              max: 360 }
-		],
-		/**
-		 *	Convert radians to degrees
-		 *	@private
-		 *	@param	{Number}	radians	the angle in radians
-		 *	@return	{Number}	the angle in degrees
-		 */
-		_toDeg = function (radians) {
-			return radians * 180 / Math.PI;
+			/**
+			 *	Geocoding service to use
+			 */
+			geocoder: 'google'
 		},
-		/**
-		 *	Return a lat/lng hash
-		 *	@private
-		 *	@param	{google.maps.LatLng|geous.Location}	p	The location to convert
-		 *	@return	{Object}
-		 */
-		_toLatLng = function (p) {
 
-			if (p instanceof geous.Location) {
-				
-				return {
-					lat: p.latitude,
-					lng: p.longitude
-				}
-			} else {
-
-				return { // google maps
-					lat: p.lat(),
-					lng: p.lng()
-				}
-			}
-		},
 		/**
 		 *	Convert degrees to radians
 		 *	@private
 		 *	@param	{Number}	degrees	the angle in degrees
 		 *	@return	{Number}	the angle in radians
 		 */
-		_toRad = function (degrees) {
+		_deg2rad = function (degrees) {
 			return degrees * Math.PI / 180;
-		};
+		},
+		
+		
+		/**
+		 *	Shallow copies object properties onto the first object passed
+		 *
+		 *	@param	{Object}	obj1	The destination object
+		 *	@param	{Object}	obj2	Additional objects to copy
+		 *	@private
+		 */
+		_extend = function() {
+
+			var i = 0, key, obj,
+				result = arguments[0];
+
+			while (obj = arguments[i++]) {
+				if (obj instanceof Object) {
+					for(key in obj) {
+						result[key] = obj[key];
+					}
+				}
+			}
+
+			return result;
+		},
+
+		/**
+		 *	no-op
+		 */
+		_nop = function() { /* nothing to see here */ };
+
+	this.extend = _extend;
+
+	/**
+	 *	Basic event handling
+	 */
+	this.Events = {
+
+		/**
+		 *	A hash of event listeners
+		 *	@type	{Object}
+		 */
+		listeners: {},
+
+		/**
+		 *	Bind a callback to an event
+		 *	@param	{String}	event	the event to listen for
+		 *	@param	{Function}	callback	the callback to execute on `event`
+		 */
+		on: function(event, callback) {
+			var evt = this.listeners[event] || [];
+			evt.push(callback);
+			this.listeners[event] = evt;
+		},
+
+		/**
+		 *	Trigger an event, firing any callbacks bound by `on`. Any additional
+		 *	parameters passed will be forwæarded to each ca llback function
+		 *
+		 *	@param	{String}	event	the event to listen for
+		 */
+		trigger: function(event) {
+
+			var args = [].splice.call(arguments, 1),
+				callback,
+				i = 0;
+
+			if (!this.listeners[event]) return;
+
+			while (callback = this.listeners[event][i++]) {
+				callback.apply(this, args);
+			}
+		}
+	}
+
+	/**
+	 *	Namespace for geocoding service providers
+	 *	@namespace
+	 */
+	this.geocoders = function() {
+
+		var _services = {};
+
+		return function(name) {
+
+			if (!_services.hasOwnProperty(name)) {
+				_services[name] = _extend({}, geous.Events); 
+			}
+			return _services[name];
+		}
+	}();
+
+	/**
+	 *	Describes the geocoder ca che
+	 *
+	 *	Options include:
+	 *
+	 *	- `persist`       : whether the cache should persist through
+	 *				        the supplied `storageAdaptÌer`
+	 *	- `prefix`        : an arbitrary prefix (e.g., `window.location`)
+	 *	                    used to identify cached results
+	 *	- `storageAdapter`: the persistence layer to use for ca ching
+	 *
+	 *	@constructor
+	 *	@param	{Object=}	opts	caching options
+	 */
+	this.HashStore = function(opts) {
+
+		var	
+			// A list of cached req/res pairs
+			_cached = {},
+
+			// Default settings
+			_options = {
+				persist: false,
+				prefix: '',
+				storageAdapter: null
+			},
+	
+			// Should the cache persist between page loads?
+			_persist = false,
+
+			// Convert an arbitrary request to a unique string
+			_serialize = function(key) {
+				return JSON.stringify(key);
+			};
+
+		_extend(_options, opts);
+
+		/**
+		 *	Retrieve the response to a cached request
+		 *
+		 *	@param	{Object}	req	the request to look up
+		 *	@return	{Object}	the response to the request or `null` if unavailable
+		 */
+		this.get = function(req) {
+			req = _serialize(req);
+			if (_cached[req] instanceof Object) {
+				return _cached[req].item;
+			}
+			return null;
+		}
+
+		/**
+		 *	Set a cache request/response pair
+		 *
+		 *	@param	{Object}	req	the request that generated the response
+		 *	@param	{Object}	res	the response retrieved
+		 */
+		this.set = function(req, res) {
+			
+			req = _serialize(req);
+
+			_cached[req] = {
+				date: new Date(),
+				item: res
+			};
+
+			if (_persist && _options.storageAdapter) {
+				// store to persistence layer
+				_options.storageAdapter.set('geous', _cached);
+			}
+		}
+
+		/**
+		 *	Store the cache using an arbitrary persistence layer (by default
+		 *	using a localStorage adapter)
+		 */
+		this.persist = function() {
+
+			if (!(_options.storageAdapter instanceof Object)) {
+				throw('geous.Cache.persist failed: no storageAdapter available');
+			}
+
+			if (!_persist) {
+				// retrieve from persistence layer?
+				_options.storageAdapter.set('geous', _extend(_options.storageAdapter.get('geous'), _cached))
+			}
+
+			_persist = true;
+		}
+
+		if (_options.persist) {
+			this.persist();
+		}
+	}
+
+	/**
+	 *	Describes a location.
+	 *
+	 *	`location` parameter may follow a variety of formats:
+	 *	
+	 *	    new geous.Location(new geous.Location());
+	 *	    new geous.Location('123 abc st, akron, ohio');
+	 *	    new geous.Location(48.3689, -99.9962);
+	 *	    new geous.Location([48.3689, -99.9962]);
+	 *	    new geous.Location(['123 abc st', 'akron', 'ohio']);
+	 *	    new geous.Location({lat: 48.3689, lng: -99.9962});
+	 *	    new geous.Location({city: 'akron', state: 'ohio'});
+	 *
+	 *	`geous.Location` is a convenience object. It's up to the application developer 
+	 *	to ensure that the coordinates and address of any given location are congruous 
+	 *	before geocoding is performed
+	 *
+	 *	@extends {geous.Events}
+	 *	@param	{Object|Array|Number|String}	location	A representation of a location
+	 */
+	this.Location = function (location) {
+
+		var	defaults = {
+				coordinates: {
+					lat: null,
+					lng: null
+				},
+				name: '',
+				raw_address: '',
+				city: '',
+				country: '',
+				state: '',
+				address: '',
+				zipcode: '',
+			};
+
+		_extend(this, geous.Events, defaults);
+
+		/**
+		 *	Set the address of this location
+		 *	
+		 *	`address` parameter may follow any of the following formats:
+		 *
+		 *	- this.setAddress('123 abc st, akron, ohio');
+		 *	- this.setAddress(['123 abc st', 'akron', 'ohio']);
+		 *	- this.setAddress({city: 'akron', state: 'ohio'});
+		 *
+		 *	@param	{Object|Array|String}	address	a representation of the ad≠dress
+		 */
+		this.setAddress = function(address) {
+
+			var key;
+
+			if (address instanceof Object) {
+				for (key in defaults) {
+					if (address[key]) {
+						this[key] = address[key];
+					}
+				}
+			} else if (address instanceof Array) {
+				this.raw_address = address.join(' ');
+			} else if (typeof address == 'string') {
+				this.raw_address = address;
+			}
+		}
+
+		/**
+		 *	Sets the coordinates of this location
+		 *
+		 *	Input may follow a variety of formats:
+		 *
+		 *	- this.setCoordinates(48.3689, -99.9962);
+		 *	- this.setCoordinates([48.3689, -99.9962]);
+		 *	- this.setCoordinates({lat: 48.3689, lng: -99.9962});
+		 *
+		 *	@param	{Array|Object|Number}	lat
+		 *	@param	{Number=}	lng
+		 */
+		this.setCoordinates = function(lat, lng) {
+
+			if (lat instanceof Array) {
+				lng = lat[1];
+				lat = lat[0];
+			} else if (lat instanceof Object) {
+				lng = lat.lng;
+				lat = lat.lat;
+			}
+
+			this.coordinates = {
+				lat: lat,
+				lng: lng
+			};
+		}
+
+		/**
+		 *	Returns a textual representation of this location
+		 *
+		 *	Return format:
+		 *	    '123 Main st., Anywhere, USA'
+		 *
+		 *	@return	{String}
+		 */
+	    this.toAddress = function() {
+
+			var address = [this.address, this.city, this.state, this.zipcode, this.country].join(' ');
+
+			if (address.trim() != '') {
+				return address;
+			} else if (this.raw_address != '') {
+				return this.raw_address;
+			}
+    	}
+
+		if (location !== undefined) {
+
+			if (location instanceof geous.Location) {
+				// copy the location
+				_extend(this, location);
+			} else if (typeof location == 'string') {
+				// guess: loc follows '123 abc st akron ohioº'
+				this.setAddress(location);
+			} else if (typeof location == 'number' && typeof arguments[1] == 'number') {
+				this.setCoordinates({
+					lat: location, 
+					lng: arguments[1]
+				});
+			} else if (location instanceof Array) {
+
+				if (typeof location[0] == 'string') {
+					// guess: loc follows ['addressComponent1', ...]
+					this.setAddress(location);
+				} else if (location.length == 2) {
+					// guess: loc follows [lat, lng]
+					this.setCoordinates({
+						lat: location[0], 
+						lng: location[1]
+					});
+				}
+			} else if (location instanceof Object) {
+				if (location.lat && location.lng) {
+					// guess: loc follows {lat: ..., lng: ... }
+					this.setCoordinates(location);
+				} else {
+					// guess: loc follows {city: ..., state: ... }
+					this.setAddress(location);
+				}
+			} else {
+				throw('geous.Location: unrecognized address format');
+			}
+		}
+	};
+
+	/**
+	 *	@namespace
+	 */
+	this.calculate = {
+
+		/**
+		 *	Compute initial bearing from one location to another
+		 *
+		 *	@param	{geous.Location}	p1	The location from
+		 *	@param	{geous.Location}	p2	The location to
+		 *	@return	{Number}	initial bearing in degrees
+		 */
+		bearing: function(p1, p2) {
+
+			var angle,
+				p1 = p1.coordinates,
+				p2 = p2.coordinates,
+				d_lng = _deg2rad(p2.lng-p1.lng),
+				lat1 = _deg2rad(p1.lat),
+				lat2 = _deg2rad(p2.lat),
+				x = Math.cos(lat1)*Math.sin(lat2) - Math.sin(lat1)*Math.cos(lat2) * Math.cos(d_lng),
+				y = Math.sin(d_lng) * Math.cos(lat2)
+
+			angle = (Math.atan2(y, x) * 180 / Math.PI);
+
+			if (angle < 0) {
+				angle += 360;
+			}
+
+			return angle % 360;
+
+		},
 
 		/**
 		 *	Compute distance between two points using Haversine Formula
 		 *
 		 *	@see	http://en.wikipedia.org/wiki/Haversine_formula
 		 *
-		 *	@param	{google.maps.LatLng|geous.Location}	p1	The location from
-		 *	@param	{google.maps.LatLng|geous.Location}	p2	The location to
+		 *	@param	{geous.Location}	p1	The location from
+		 *	@param	{geous.Location}	p2	The location to
 		 *	@return	{Number}	distance in km
 		 */
-		this.distanceBetween = function (p1, p2) {
+		distanceBetween: function (p1, p2) {
 
-			var p1 = _toLatLng(p1),
-				p2 = _toLatLng(p2),
-				d_lat = _toRad(p2.lat-p1.lat),
-				d_lng = _toRad(p2.lng-p1.lng),
-				lat1 = _toRad(p1.lat),
-				lat2 = _toRad(p2.lat),
+			var radius = {
+				'km': 6371,
+				'mi': 3959 
+			};
+
+			p1 = p1.coordinates;
+			p2 = p2.coordinates;
+
+			var d_lat = _deg2rad(p2.lat-p1.lat),
+				d_lng = _deg2rad(p2.lng-p1.lng),
+				lat1 = _deg2rad(p1.lat),
+				lat2 = _deg2rad(p2.lat),
 				a = Math.sin(d_lat/2) * Math.sin(d_lat/2) + Math.sin(d_lng/2) * Math.sin(d_lng/2) * Math.cos(p1.lat) * Math.cos(p2.lat),
 				c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
 
-			return 6371 * c;
+			return radius.km * c;
 		},
-		/**
-		 *	Compute initial bearing between two points
-		 *
-		 *	@param	{google.maps.LatLng|geous.Location}	p1	The location from
-		 *	@param	{google.maps.LatLng|geous.Location}	p2	The location to
-		 *	@return	{Number}	bearing in degrees
-		 */
-		this.initialBearing = function (p1, p2) {
 
-			var p1 = _toLatLng(p1),
-				p2 = _toLatLng(p2),
-				d_lng = _toRad(p2.lng-p1.lng),
-				lat1 = _toRad(p1.lat),
-				lat2 = _toRad(p2.lat),
-				x = Math.cos(lat1)*Math.sin(lat2) - Math.sin(lat1)*Math.cos(lat2) * Math.cos(d_lng),
-				y = Math.sin(d_lng) * Math.cos(lat2)
-				
-			return _toDeg( Math.atan2(y, x));
-		},
-		/**
-		 *	Compute compass heading between two points
-		 *
-		 *	@methodof geous.compute.prototype
-		 *	@param	{google.maps.LatLng|geous.Location}	p1	The location from
-		 *	@param	{google.maps.LatLng|geous.Location}	p2	The location to
-		 *	@return	{String}	the compass point
-		 */
-		this.compassHeading = function (p1, p2, useLong) {
+	}
 
-			var bearing = this.initialBearing(p1,p2) % 360,
-				h,
-				i = 0;
+	/**
+	 *	Initiate a geocoding request
+	 *
+	 *	Options include:
+	 *
+	 *	- `reverse`	a flag indicating that a reverse lookup should be æused to find
+	 *				the address at a lat/lng pair
+	 *	- `success` a callback function to receive the new `geous.Location` populated
+	 *	            by a successful geocoding request
+	 *	- `error` a callback function to receive an error status when a request fails
+	 *
+	 *	@param	{geous.Location}	location	the location to code up
+	 *	@param	{Object=}	opts	options
+	 */
+	this.geocode = function(location, opts) {
 
-			if (bearing < 0) {
-				bearing += 360;
-			}
+		var defaults = {
+			reverse: false,
+			success: _nop,
+			error: _nop
+		};
 
-			while (h = _headings[++i]) {
-				if( h.max > bearing ) {
-					return useLong ? h.longName : h.name;
-				}
-			}
+		var options = _extend({}, defaults, opts);
+
+		var provider = this.options.geocoder,
+			service = this.geocoders(provider);
+
+		if (!service.geocode) {
+			throw('geous.geocode: provider ' + provider + ' does not support geocoding');
 		}
+
+		if (!(location instanceof geous.Location)) {
+			location = new geous.Location(location);
+		}
+
+		service.geocode(location, options);
+	}
+
+	/**
+	 *	Get the user's current location
+	 *
+	 *	Options include:
+	 *
+	 *	- `success` a callback function to receive the user's location if it can be
+	 *				retrieved successfully
+	 *	- `error` a callback function to receive an error status when a request fails
+	 *
+	 *	@param	{Object=}	opts	options 
+	 */
+	this.getUserLocation = function(opts) {
+
+		var defaults = {
+			success: _nop,
+			error: _nop
+		};
+
+		var options = _extend({}, defaults, opts);
+
+		// convert a successful response into a geous.Location and call the
+		// user-specified `success` function:
+		var _successHandler = function(position) {
+			var coords = position.coords,
+				location = new geous.Location(coords.latitude, coords.longitude);
+
+			options.success(location);
+		}
+
+		// check to make sure the browser supports the geolocation API:
+		if (!navigator.geolocation) {
+			return options.error('Browser does not support geolocation');
+		}
+
+		navigator.geolocation.getCurrentPosition(_successHandler, options.error);
+	}
+
+	this.init = function(opts) {
+
+		// set up `on` and `trigger` for event handling
+		_extend(this, geous.Events);
+
+		// set up default options
+		this.options = {};
+		_extend(this.options, _defaults, opts);
+
+		if (this.options.useCache) {
+			// set up cache
+			this.cache = new this.HashStore({
+				persist        : this.options.cachePersist,
+				prefix         : this.options.cachePrefix,
+				storageAdapter : this.options.cacheAdapter
+			});
+		}
+
+		// prevent init from being called again
+		geous.init = _nop;
+	}
 };
-
-/** Export symbols for Closure Compiler: **/
-window['geous'] = geous;
-geous['Me'] = geous.Me;
-geous['addEventListener'] = geous.addEventListener;
-geous['fromGeocoderResultToLocation'] = geous.fromGeocoderResultToLocation;
-geous['geocode'] = geous.geocode;
-geous['withMaps'] = geous.withMaps;
-geous['withLocation'] = geous.withLocation;
-geous['withMe'] = geous.withMe;
-
-geous['Address'] = geous.Address;
-geous.Address['toString'] = geous.Address.prototype.toString;
-
-geous['Error'] = geous.Error
-
-geous['Event'] = geous.Event
-geous.Event['toString'] = geous.Event.prototype.toString;
-
-geous['Location'] = geous.Location;
-geous.Location.prototype['toLatLng'] = geous.Location.prototype.toLatLng;
-
-geous['compute'] = geous.compute;
-geous.compute['distanceBetween'] = geous.compute.distanceBetween;
-geous.compute['initialBearing'] = geous.compute.initialBearing;
-geous.compute['compassHeading'] = geous.compute.compassHeading;
