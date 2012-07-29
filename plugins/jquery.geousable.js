@@ -32,10 +32,12 @@
 				'lng'        : '.lng'
 			},
 
-			// Callback to call when a lookup fails to populate a field
+			// Callback to call when a lookup fails to populate a 
+			// field on setLocation
 			onFieldError: null,
 
-			// Callback to call when a lookup successfully populates a field
+			// Callback to call when a lookup successfully populates 
+			// a field on setLocation
 			onFieldSuccess: null,
 			
 			// Overwrite user-filled fields on setLocation?

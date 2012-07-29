@@ -2,7 +2,7 @@
 
 	'use strict';
 
-	if (!google) {
+	if (typeof(google) == 'undefined') {
 		throw('Please provide the Google Maps API before attempting to geocode with Google');
 	}
 
