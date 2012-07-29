@@ -30,7 +30,16 @@
 				'state'      : '.state',
 				'lat'        : '.lat',
 				'lng'        : '.lng'
-			}
+			},
+
+			// Callback to call when a lookup fails to populate a field
+			onFieldError: null,
+
+			// Callback to call when a lookup successfully populates a field
+			onFieldSuccess: null,
+			
+			// Overwrite user-filled fields on setLocation?
+			overwrite: false
 		}
 
 		var	_val = function(val) {
@@ -107,6 +116,8 @@
 		//
 		this.setLocation = function (location) {
 
+			var self = this;
+
 			var hash = new geous.Location(location);
 
 			$.each(this.options.map, function(attr, selector) {
@@ -119,7 +130,20 @@
 					val = hash.coordinates[attr];
 				}
 
-				$field[method](val);
+				if ((self.options.overwrite) || ($field[method]() == '')) {
+					$field[method](val);
+				}
+
+
+				if (val == '') {
+					if (typeof(self.options.onFieldError) == 'function') {
+						self.options.onFieldError.call(self, $field);
+					}
+				} else {
+					if (typeof(self.options.onFieldSuccess) == 'function') {
+						self.options.onFieldSuccess.call(self, $field, val);
+					}
+				}
 
 			});
 		}
