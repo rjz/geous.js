@@ -21,15 +21,21 @@
 
 			errorHandler: function() {},
 
+			// convenience: supply a pattern to use for any null
+			// mappings, using `{%}` as a wildcard. For instance, 
+			// `[name="location[{%}]"` will map to 
+			// `[name="location[raw_address]"]`, etc, etc.
+			defaultMapPattern: '.{%}',
+
 			// Override the default map to match Geous result fields 
 			// to the CSS selectors in use on your form
 			map: {
-				'raw_address': '.raw_address',
-				'address'    : '.address',
-				'city'       : '.city',
-				'state'      : '.state',
-				'lat'        : '.lat',
-				'lng'        : '.lng'
+				'raw_address': null,
+				'address'    : null,
+				'city'       : null,
+				'state'      : null,
+				'lat'        : null,
+				'lng'        : null
 			},
 
 			// Callback to call when a lookup fails to populate a 
@@ -67,7 +73,16 @@
 			return result;
 		};
 
-		this.options = $.extend({}, defaults, opts);
+		var options = $.extend({}, defaults, opts);
+
+		// apply defaultMapPattern to any null mappings
+		$.each(options.map, function (attr, selector) {
+			if (selector === null) {
+				options.map[attr] = options.defaultMapPattern.replace('{%}', attr);
+			}
+		});
+
+		this.options = options;
 
 		// run a `geous.geocode` request on the any matched elements
 		//
@@ -110,7 +125,7 @@
 			location.setCoordinates(hash);
 
 			return location;
-		}
+		};
 
 		// map a `geous.Location` object onto the DOM
 		//
@@ -136,7 +151,6 @@
 					$field[method](val);
 				}
 
-
 				if (val == '') {
 					if (typeof(self.options.onFieldError) == 'function') {
 						self.options.onFieldError.call(self, $field);
@@ -146,12 +160,9 @@
 						self.options.onFieldSuccess.call(self, $field, val);
 					}
 				}
-
 			});
-		}
+		};
 	};
-
-	var result;
 
 	$.fn.geousable = function (param) {
 
@@ -175,6 +186,6 @@
 		});
 
 		return (typeof result != 'undefined') ? result : $(this);
-	};
+	};	
 
 })(window.jQuery);
