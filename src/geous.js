@@ -497,7 +497,7 @@ var geous = new function() {
 	 *
 	 *	Options include:
 	 *
-	 *	- `reverse`	a flag indicating that a reverse lookup should be ¾used to find
+	 *	- `reverse`	a flag indicating that a reverse lookup should be used to find
 	 *				the address at a lat/lng pair
 	 *	- `success` a callback function to receive the new `geous.Location` populated
 	 *	            by a successful geocoding request
