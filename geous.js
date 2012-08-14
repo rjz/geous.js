@@ -282,9 +282,9 @@ var geous = new function() {
 	 *	@extends {geous.Events}
 	 *	@param	{Object|Array|Number|String}	location	A representation of a location
 	 */
-	this.Location = function (location) {
+	this.Location = (function () {
 
-		var	defaults = {
+		var defaults = {
 				coordinates: {
 					lat: null,
 					lng: null
@@ -298,7 +298,53 @@ var geous = new function() {
 				zipcode: '',
 			};
 
-		_extend(this, geous.Events, defaults);
+        /**
+         *  Constructor-esque actions
+         *  @param  {geous.Location|String|Number|Array}  location    a location
+         */
+        function Location (location) {
+
+    		_extend(this, geous.Events, defaults);
+
+            if (location !== undefined) {
+
+                if (location instanceof geous.Location) {
+                    // copy the location
+                    _extend(this, location);
+                } else if (typeof location == 'string') {
+                    // guess: loc follows '123 abc st akron ohio�'
+                    this.setAddress(location);
+                } else if (typeof location == 'number' && typeof arguments[1] == 'number') {
+                    this.setCoordinates({
+                        lat: location, 
+                        lng: arguments[1]
+                    });
+                } else if (location instanceof Array) {
+
+                    if (typeof location[0] == 'string') {
+                        // guess: loc follows ['addressComponent1', ...]
+                        this.setAddress(location);
+                    } else if (location.length == 2) {
+                        // guess: loc follows [lat, lng]
+                        this.setCoordinates({
+                            lat: location[0], 
+                            lng: location[1]
+                        });
+                    }
+                } else if (location instanceof Object) {
+                    if (location.lat && location.lng) {
+                        // guess: loc follows {lat: ..., lng: ... }
+                        this.setCoordinates(location);
+                    } else {
+                        // guess: loc follows {city: ..., state: ... }
+                        this.setAddress(location);
+                    }
+                } else {
+                    throw('geous.Location: unrecognized address format');
+                }
+            }
+
+        }
 
 		/**
 		 *	Set the address of this location
@@ -311,7 +357,7 @@ var geous = new function() {
 		 *
 		 *	@param	{Object|Array|String}	address	a representation of the ad�dress
 		 */
-		this.setAddress = function(address) {
+		Location.prototype.setAddress = function(address) {
 
 			var key;
 
@@ -326,7 +372,7 @@ var geous = new function() {
 			} else if (typeof address == 'string') {
 				this.raw_address = address;
 			}
-		}
+		};
 
 		/**
 		 *	Sets the coordinates of this location
@@ -340,7 +386,7 @@ var geous = new function() {
 		 *	@param	{Array|Object|Number}	lat
 		 *	@param	{Number=}	lng
 		 */
-		this.setCoordinates = function(lat, lng) {
+		Location.prototype.setCoordinates = function(lat, lng) {
 
 			if (lat instanceof Array) {
 				lng = lat[1];
@@ -354,7 +400,7 @@ var geous = new function() {
 				lat: lat,
 				lng: lng
 			};
-		}
+		};
 
 		/**
 		 *	Returns a textual representation of this location
@@ -364,7 +410,7 @@ var geous = new function() {
 		 *
 		 *	@return	{String}
 		 */
-	    this.toAddress = function() {
+	    Location.prototype.toAddress = function() {
 
 			var address = [this.address, this.city, this.state, this.zipcode, this.country].join(' ');
 
@@ -373,46 +419,10 @@ var geous = new function() {
 			} else if (this.raw_address != '') {
 				return this.raw_address;
 			}
-    	}
+    	};
 
-		if (location !== undefined) {
-
-			if (location instanceof geous.Location) {
-				// copy the location
-				_extend(this, location);
-			} else if (typeof location == 'string') {
-				// guess: loc follows '123 abc st akron ohio�'
-				this.setAddress(location);
-			} else if (typeof location == 'number' && typeof arguments[1] == 'number') {
-				this.setCoordinates({
-					lat: location, 
-					lng: arguments[1]
-				});
-			} else if (location instanceof Array) {
-
-				if (typeof location[0] == 'string') {
-					// guess: loc follows ['addressComponent1', ...]
-					this.setAddress(location);
-				} else if (location.length == 2) {
-					// guess: loc follows [lat, lng]
-					this.setCoordinates({
-						lat: location[0], 
-						lng: location[1]
-					});
-				}
-			} else if (location instanceof Object) {
-				if (location.lat && location.lng) {
-					// guess: loc follows {lat: ..., lng: ... }
-					this.setCoordinates(location);
-				} else {
-					// guess: loc follows {city: ..., state: ... }
-					this.setAddress(location);
-				}
-			} else {
-				throw('geous.Location: unrecognized address format');
-			}
-		}
-	};
+        return Location;
+	})();
 
 	/**
 	 *	@namespace
@@ -590,6 +600,15 @@ var geous = new function() {
 		'locality'                    : 'city',
 		'administrative_area_level_1' : 'state',
 		'postal_code'                 : 'zipcode'
+    };
+
+    /**
+     *  Patch geous.Location to add toLatLng()
+     *  @return {google.maps.LatLng}
+     */
+    geous.Location.prototype.toLatLng = function () {
+       var coords = this.coordinates;
+       return new google.maps.LatLng(coords.lat, coords.lng);
     };
 
 	/**
