@@ -97,9 +97,24 @@
 			}
 
 			if (location.toAddress() != '') {
-				geous.geocode(this.getLocation(), opts);
+				geous.geocode(location, opts);
 			}
-		}
+		};
+
+		// Retrieve a selector containing all fields matched by the
+		// current field map
+		//
+		// @return {jQuery}
+		//
+		this.getMappedFields = function () {
+
+			var $fields = $();
+
+			$.each(this.options.map, function(attr, selector) {
+				$fields = $fields.add(selector, $this);
+			});
+			return $fields;
+		};
 
 		// retrieve a `geous.Location` object from the DOM
 		//
@@ -122,6 +137,7 @@
 			});
 
 			location = new geous.Location(hash);
+
 			location.setCoordinates(hash);
 
 			return location;
@@ -130,18 +146,30 @@
 		// map a `geous.Location` object onto the DOM
 		//
 		// @param	{Object}	location	geous.Location or valid constructor arguments
+		// @param	{Object=}	ops		hash of options
 		//
-		this.setLocation = function (location) {
+		this.setLocation = function (location, opts) {
 
 			var self = this;
 
+			var defaults = {
+					only: []
+				};
+
 			var hash = new geous.Location(location);
+
+			var options = $.extend(defaults, opts);
 
 			$.each(this.options.map, function(attr, selector) {
 
 				var $field = $(selector, $this),
 					val = hash[attr],
 					method = $field.is(':input') ? 'val' : 'text';
+
+				// skip any fields listed
+				if (defaults.only.length && options.only.indexOf(attr) == -1) {
+					return;
+				}
 
 				if (attr == 'lat' || attr == 'lng') {
 					val = hash.coordinates[attr];
