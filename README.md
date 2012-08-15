@@ -38,6 +38,8 @@ A wrapper for the HTML5 location API that will return a Geous Location. `success
         }
     });
 
+If `geocode: true` is added to the options hash, the resulting location will be geocoded. Be sure to call `geous.init()` before requesting a geocoded location (see notes below).
+
 geous.geocode
 -------------
 
@@ -46,13 +48,12 @@ A wrapper for various geocoders that will reverse/geocode a location or lat-lng 
 **Note**: `geous.init` must be called to assign a geocoder before `geous.geocode()` is called.
 
     geous.init();
-    geous.getUserLocation({
-        success: function (location) {
-            geous.geocode(location, {
-                reverse: true,
-                success: function (location) {
 
-                }
-            })
-        })
-    });
+    var location = new geous.Location(100, 30);
+
+    geous.geocode(location, {
+        reverse: true,
+        success: function (location) {
+            console.log(location);
+        }
+    })
