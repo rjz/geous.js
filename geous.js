@@ -168,7 +168,7 @@ var geous = new function() {
 	}();
 
 	/**
-	 *	Describes the geocoder ca�che
+	 *	Describes the geocoder cache
 	 *
 	 *	Options include:
 	 *
@@ -216,7 +216,7 @@ var geous = new function() {
 				return _cached[req].item;
 			}
 			return null;
-		}
+		};
 
 		/**
 		 *	Set a cache request/response pair
@@ -237,7 +237,7 @@ var geous = new function() {
 				// store to persistence layer
 				_options.storageAdapter.set('geous', _cached);
 			}
-		}
+		};
 
 		/**
 		 *	Store the cache using an arbitrary persistence layer (by default
@@ -255,7 +255,7 @@ var geous = new function() {
 			}
 
 			_persist = true;
-		}
+		};
 
 		if (_options.persist) {
 			this.persist();
@@ -263,9 +263,13 @@ var geous = new function() {
 	}
 
 	/**
-	 *	Describes a location.
+     *  Locations are the basic unit of geous data, containing:
 	 *
-	 *	`location` parameter may follow a variety of formats:
+     *   * a lat/lng coordinate pair (`location.coordinates`)
+     *   * textual address compontents (`location.address`, etc)
+     *   * helper utilities for converting between them
+     *
+     *  The constructor accepts a variety of formats, including:
 	 *	
 	 *	    new geous.Location(new geous.Location());
 	 *	    new geous.Location('123 abc st, akron, ohio');
@@ -299,7 +303,7 @@ var geous = new function() {
 			};
 
         /**
-         *  Constructor-esque actions
+         *  @constructor
          *  @param  {geous.Location|String|Number|Array}  location    a location
          */
         function Location (location) {
@@ -315,12 +319,12 @@ var geous = new function() {
                     // guess: loc follows '123 abc st akron ohio�'
                     this.setAddress(location);
                 } else if (typeof location == 'number' && typeof arguments[1] == 'number') {
+                    // guess: loc follows (lat, lng)
                     this.setCoordinates({
                         lat: location, 
                         lng: arguments[1]
                     });
                 } else if (location instanceof Array) {
-
                     if (typeof location[0] == 'string') {
                         // guess: loc follows ['addressComponent1', ...]
                         this.setAddress(location);
@@ -335,10 +339,10 @@ var geous = new function() {
                     if (location.lat && location.lng) {
                         // guess: loc follows {lat: ..., lng: ... }
                         this.setCoordinates(location);
-                    } else {
-                        // guess: loc follows {city: ..., state: ... }
-                        this.setAddress(location);
+                        delete location.lat, location.lng;
                     }
+                    // guess: loc follows {city: ..., state: ... }
+                    this.setAddress(location);
                 } else {
                     throw('geous.Location: unrecognized address format');
                 }
@@ -493,7 +497,7 @@ var geous = new function() {
 	 *
 	 *	Options include:
 	 *
-	 *	- `reverse`	a flag indicating that a reverse lookup should be �used to find
+	 *	- `reverse`	a flag indicating that a reverse lookup should be used to find
 	 *				the address at a lat/lng pair
 	 *	- `success` a callback function to receive the new `geous.Location` populated
 	 *	            by a successful geocoding request
@@ -533,7 +537,9 @@ var geous = new function() {
 	 *
 	 *	- `success` a callback function to receive the user's location if it can be
 	 *				retrieved successfully
-	 *	- `error` a callback function to receive an error status when a request fails
+	 *	- `error`   a callback function to receive an error status when a request fails
+     *  - `geocode` if `true`, location will be geocoded before success callback is
+     *              called
 	 *
 	 *	@param	{Object=}	opts	options 
 	 */
@@ -541,7 +547,8 @@ var geous = new function() {
 
 		var defaults = {
 			success: _nop,
-			error: _nop
+			error: _nop,
+            geocode: false
 		};
 
 		var options = _extend({}, defaults, opts);
@@ -552,7 +559,16 @@ var geous = new function() {
 			var coords = position.coords,
 				location = new geous.Location(coords.latitude, coords.longitude);
 
-			options.success(location);
+            if (options.geocode) {
+                // pass location+callbacks through to geocode()
+                geous.geocode(location, {
+                    reverse: true,
+                    success: options.success,
+                    error: options.error
+                });
+            } else {
+			    options.success(location);
+            }
 		}
 
 		// check to make sure the browser supports the geolocation API:
@@ -1055,15 +1071,21 @@ var geous = new function() {
 
 			errorHandler: function() {},
 
+			// convenience: supply a pattern to use for any null
+			// mappings, using `{%}` as a wildcard. For instance, 
+			// `[name="location[{%}]"` will map to 
+			// `[name="location[raw_address]"]`, etc, etc.
+			defaultMapPattern: '.{%}',
+
 			// Override the default map to match Geous result fields 
 			// to the CSS selectors in use on your form
 			map: {
-				'raw_address': '.raw_address',
-				'address'    : '.address',
-				'city'       : '.city',
-				'state'      : '.state',
-				'lat'        : '.lat',
-				'lng'        : '.lng'
+				'raw_address': null,
+				'address'    : null,
+				'city'       : null,
+				'state'      : null,
+				'lat'        : null,
+				'lng'        : null
 			},
 
 			// Callback to call when a lookup fails to populate a 
@@ -1101,7 +1123,16 @@ var geous = new function() {
 			return result;
 		};
 
-		this.options = $.extend({}, defaults, opts);
+		var options = $.extend({}, defaults, opts);
+
+		// apply defaultMapPattern to any null mappings
+		$.each(options.map, function (attr, selector) {
+			if (selector === null) {
+				options.map[attr] = options.defaultMapPattern.replace('{%}', attr);
+			}
+		});
+
+		this.options = options;
 
 		// run a `geous.geocode` request on the any matched elements
 		//
@@ -1116,9 +1147,24 @@ var geous = new function() {
 			}
 
 			if (location.toAddress() != '') {
-				geous.geocode(this.getLocation(), opts);
+				geous.geocode(location, opts);
 			}
-		}
+		};
+
+		// Retrieve a selector containing all fields matched by the
+		// current field map
+		//
+		// @return {jQuery}
+		//
+		this.getMappedFields = function () {
+
+			var $fields = $();
+
+			$.each(this.options.map, function(attr, selector) {
+				$fields = $fields.add(selector, $this);
+			});
+			return $fields;
+		};
 
 		// retrieve a `geous.Location` object from the DOM
 		//
@@ -1141,10 +1187,11 @@ var geous = new function() {
 			});
 
 			location = new geous.Location(hash);
+
 			location.setCoordinates(hash);
 
 			return location;
-		}
+		};
 
 		// map a `geous.Location` object onto the DOM
 		//
@@ -1170,7 +1217,6 @@ var geous = new function() {
 					$field[method](val);
 				}
 
-
 				if (val == '') {
 					if (typeof(self.options.onFieldError) == 'function') {
 						self.options.onFieldError.call(self, $field);
@@ -1180,12 +1226,9 @@ var geous = new function() {
 						self.options.onFieldSuccess.call(self, $field, val);
 					}
 				}
-
 			});
-		}
+		};
 	};
-
-	var result;
 
 	$.fn.geousable = function (param) {
 
@@ -1209,6 +1252,6 @@ var geous = new function() {
 		});
 
 		return (typeof result != 'undefined') ? result : $(this);
-	};
+	};	
 
 })(window.jQuery);
