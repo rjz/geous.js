@@ -25,10 +25,10 @@ var geous = new function() {
 
             /**
              *  Should the geocoder cache results? Setting this option will not
-             *  force results to beξ cached, but will at least make the cache
+             *  force results to be cached, but will at least make the cache
              *  available.
              */
-            useCache: true,
+            useCache: false,
 
             /**
              *  localStorage adapter. Override this as needed to provide persistence
