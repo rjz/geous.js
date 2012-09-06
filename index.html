@@ -1,0 +1,152 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Geous.js by rjz</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1 class="header">Geous.js</h1>
+        <p class="header">Javascript Geolocation made easy</p>
+
+        <ul>
+          <li class="download"><a class="buttons" href="https://github.com/rjz/geous.js/zipball/master">Download ZIP</a></li>
+          <li class="download"><a class="buttons" href="https://github.com/rjz/geous.js/tarball/master">Download TAR</a></li>
+          <li><a class="buttons github" href="https://github.com/rjz/geous.js">View On GitHub</a></li>
+        </ul>
+
+        <p class="header">This project is maintained by <a class="header name" href="https://github.com/rjz">rjz</a></p>
+
+
+      </header>
+      <section>
+        <h1>Geous.js</h1>
+
+<p>Javascript geolocation and geocoding made easy.</p>
+
+<h2>Overview</h2>
+
+<p>Geous provides several useful tools for simplifying location-based tasks and a common format for handling their results.</p>
+
+<h3>geous.Location</h3>
+
+<p>Geous <code>Location</code> objects are the basic currency of Geous operations, and may be constructed from a variety of formats. All of the following are valid:</p>
+
+<pre><code>// copy constructor
+new geous.Location(new geous.Location());
+
+// address string
+new geous.Location('123 abc st, akron, ohio');
+
+// address components
+new geous.Location(['123 abc st', 'akron', 'ohio']);
+new geous.Location({city: 'akron', state: 'ohio'});
+
+// lat/lng coordinates
+new geous.Location(48.3689, -99.9962);
+new geous.Location([48.3689, -99.9962]);
+new geous.Location({lat: 48.3689, lng: -99.9962});
+</code></pre>
+
+<p>The <code>setAddress</code> and <code>setCoordinates</code> methods used by the constructor may also be used to assign location components to an existing <code>geous.Location</code>:</p>
+
+<pre><code>var location = new geous.Location();
+
+location.setAddress({city: 'akron', state: 'ohio'});
+console.log(location.city, location.state);
+
+location.setCoordinates(48.3689, -99.9962);
+console.log(location.coords);
+</code></pre>
+
+<h3>geous.geocode</h3>
+
+<p>Geous provides a catch-all method for converting between various location formats. </p>
+
+<pre><code>var location = new geous.Location({ city: 'Truckee', state: 'CA' });
+
+geous.geocode(location, {
+    error: function () {
+        alert('well, that didn\'t work out!');
+    },
+    success: function (location) {
+        console.log(location.coords);
+    }
+});
+</code></pre>
+
+<p>Besides supporting <code>success</code> and <code>error</code> callbacks, the geocoder may be used to reverse-geocode a lat-lng pair by specifiying <code>{ reverse: true }</code>.</p>
+
+<pre><code>var location = new geous.Location(48.3689, -99.9962);
+
+geous.geocode(location, {
+    reverse: true,
+    success: function (location) {
+        console.log(location);
+    }
+});
+</code></pre>
+
+<p>Prior to calling <code>geous.geocode</code>, an alternative geocoder may be assigned using <code>geous.configure()</code>:</p>
+
+<pre><code>geous.configure({
+    geocoder: 'google'
+});
+</code></pre>
+
+<h3>geous.getUserLocation</h3>
+
+<p>A wrapper for the HTML5 location API that will return a Geous Location. <code>success</code> and <code>error</code> callbacks may be provided as options to handle the corresponding events:</p>
+
+<pre><code>geous.getUserLocation({
+    error: function () {
+        console.log('Something terrible has happened!');
+    },
+    success: function (location) {
+        console.log('User is at: ', location.coords);
+    }
+});
+</code></pre>
+
+<p>Adding <code>geocode: true</code> to the options hash will instruct geous to attempt to geocode the user's location.</p>
+
+<pre><code>geous.getUserLocation({
+    geocode: true,
+    success: function (location) {
+        console.log('Geocoded location:', location.toAddress());
+    }
+});
+</code></pre>
+
+<h2>License</h2>
+
+<p>geous.js is released under the JSON License. You can read the license <a href="http://www.json.org/license.html">here</a></p>
+      </section>
+      <footer>
+        <p><small>Hosted on <a href="https://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+		          <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-34633803-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+  </body>
+</html>
