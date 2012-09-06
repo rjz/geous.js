@@ -11,7 +11,9 @@ If you are using a previous version of geous, this release **will** break it
 
 */
 ;
-var geous = new function() {
+(function (window, undefined) {
+
+window.geous = new function () {
 
     'use strict';
 
@@ -85,7 +87,7 @@ var geous = new function() {
          *  @param  {Object}    obj2    Additional objects to copy
          *  @private
          */
-        _extend = function() {
+        _extend = function () {
 
             var i = 0, key, obj,
                 result = arguments[0];
@@ -102,10 +104,14 @@ var geous = new function() {
         },
 
         /**
-         *  no-op
+         *  a convenient default for callbacks
+         *  @private
          */
         _nop = function() { /* nothing to see here */ };
 
+    /**
+     *  Expose `_extend` method
+     */
     this.extend = _extend;
 
     /**
@@ -148,18 +154,17 @@ var geous = new function() {
                 callback.apply(this, args);
             }
         }
-    }
+    };
 
     /**
      *  Namespace for geocoding service providers
      *  @namespace
      */
-    this.geocoders = function() {
+    this.geocoders = function () {
 
         var _services = {};
 
         return function(name) {
-
             if (!_services.hasOwnProperty(name)) {
                 _services[name] = _extend({}, geous.Events); 
             }
@@ -181,7 +186,7 @@ var geous = new function() {
      *  @constructor
      *  @param  {Object=}   opts    caching options
      */
-    this.HashStore = function(opts) {
+    this.HashStore = function (opts) {
 
         var 
             // A list of cached req/res pairs
@@ -210,7 +215,7 @@ var geous = new function() {
          *  @param  {Object}    req the request to look up
          *  @return {Object}    the response to the request or `null` if unavailable
          */
-        this.get = function(req) {
+        this.get = function (req) {
             req = _serialize(req);
             if (_cached[req] instanceof Object) {
                 return _cached[req].item;
@@ -224,7 +229,7 @@ var geous = new function() {
          *  @param  {Object}    req the request that generated the response
          *  @param  {Object}    res the response retrieved
          */
-        this.set = function(req, res) {
+        this.set = function (req, res) {
             
             req = _serialize(req);
 
@@ -243,7 +248,7 @@ var geous = new function() {
          *  Store the cache using an arbitrary persistence layer (by default
          *  using a localStorage adapter)
          */
-        this.persist = function() {
+        this.persist = function () {
 
             if (!(_options.storageAdapter instanceof Object)) {
                 throw('geous.Cache.persist failed: no storageAdapter available');
@@ -260,7 +265,7 @@ var geous = new function() {
         if (_options.persist) {
             this.persist();
         }
-    }
+    };
 
     /**
      *  Locations are the basic unit of geous data, containing:
@@ -347,8 +352,7 @@ var geous = new function() {
                     throw('geous.Location: unrecognized address format');
                 }
             }
-
-        }
+        };
 
         /**
          *  Set the address of this location
@@ -361,7 +365,7 @@ var geous = new function() {
          *
          *  @param  {Object|Array|String}   address a representation of the ad­dress
          */
-        Location.prototype.setAddress = function(address) {
+        Location.prototype.setAddress = function (address) {
 
             var key;
 
@@ -390,7 +394,7 @@ var geous = new function() {
          *  @param  {Array|Object|Number}   lat
          *  @param  {Number=}   lng
          */
-        Location.prototype.setCoordinates = function(lat, lng) {
+        Location.prototype.setCoordinates = function (lat, lng) {
 
             if (lat instanceof Array) {
                 lng = lat[1];
@@ -414,7 +418,7 @@ var geous = new function() {
          *
          *  @return {String}
          */
-        Location.prototype.toAddress = function() {
+        Location.prototype.toAddress = function () {
 
             var address = [this.address, this.city, this.state, this.zipcode, this.country].join(' ');
 
@@ -440,7 +444,7 @@ var geous = new function() {
          *  @param  {geous.Location}    p2  The location to
          *  @return {Number}    initial bearing in degrees
          */
-        bearing: function(p1, p2) {
+        bearing: function (p1, p2) {
 
             var angle,
                 p1 = p1.coordinates,
@@ -488,9 +492,8 @@ var geous = new function() {
                 c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
 
             return radius.km * c;
-        },
-
-    }
+        }
+    };
 
     /**
      *  Initiate a geocoding request
@@ -506,7 +509,7 @@ var geous = new function() {
      *  @param  {geous.Location}    location    the location to code up
      *  @param  {Object=}   opts    options
      */
-    this.geocode = function(location, opts) {
+    this.geocode = function (location, opts) {
 
         var defaults = {
             reverse: false,
@@ -528,7 +531,7 @@ var geous = new function() {
         }
 
         service.geocode(location, options);
-    }
+    };
 
     /**
      *  Get the user's current location
@@ -543,7 +546,7 @@ var geous = new function() {
      *
      *  @param  {Object=}   opts    options 
      */
-    this.getUserLocation = function(opts) {
+    this.getUserLocation = function (opts) {
 
         var defaults = {
             success: _nop,
@@ -577,9 +580,9 @@ var geous = new function() {
         }
 
         navigator.geolocation.getCurrentPosition(_successHandler, options.error);
-    }
+    };
 
-    this.init = function(opts) {
+    this.init = function (opts) {
 
         // set up `on` and `trigger` for event handling
         _extend(this, geous.Events);
@@ -599,5 +602,8 @@ var geous = new function() {
 
         // prevent init from being called again
         geous.init = _nop;
-    }
+    };
 };
+
+})(window);
+

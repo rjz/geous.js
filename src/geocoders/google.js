@@ -12,16 +12,16 @@
 		'locality'                    : 'city',
 		'administrative_area_level_1' : 'state',
 		'postal_code'                 : 'zipcode'
-    };
+	};
 
-    /**
-     *  Patch geous.Location to add toLatLng()
-     *  @return {google.maps.LatLng}
-     */
-    geous.Location.prototype.toLatLng = function () {
-       var coords = this.coordinates;
-       return new google.maps.LatLng(coords.lat, coords.lng);
-    };
+	/**
+	 *  Patch geous.Location to add toLatLng()
+	 *  @return {google.maps.LatLng}
+	 */
+	geous.Location.prototype.toLatLng = function () {
+		 var coords = this.coordinates;
+		 return new google.maps.LatLng(coords.lat, coords.lng);
+	};
 
 	/**
 	 *	Extract a named address component from a geocoder result
