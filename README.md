@@ -6,11 +6,11 @@ Javascript geolocation and geocoding made easy.
 Overview
 --------
 
-Geous provides several useful tools for simplifying location-based tasks and a common format for handling their results.
+Geous provides several useful tools for simplifying location-based tasks and a common format for managing location-based data.
 
 ###geous.Location
 
-Geous `Location` objects are the basic currency of Geous operations, and may be constructed from a variety of formats. All of the following are valid:
+Location objects provide the basic currency for all other geous operations. A basic location may be constructed from a variety of formats, including any of the following:
 
     // copy constructor
     new geous.Location(new geous.Location());
