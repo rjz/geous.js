@@ -575,7 +575,7 @@ var geous = new function () {
 
         // convert a successful response into a geous.Location and call the
         // user-specified `success` function:
-        var _successHandler = function(position) {
+        var _successHandler = function (position) {
             var coords = position.coords,
                 location = new geous.Location(coords.latitude, coords.longitude);
 

@@ -11,9 +11,9 @@ If you are using a previous version of geous, this release **will** break it
 
 */
 ;
-(function (window, undefined) {
+(function (undefined) {
 
-window.geous = new function () {
+var geous = new function () {
 
     'use strict';
 
@@ -130,10 +130,25 @@ window.geous = new function () {
          *  @param  {String}    event   the event to listen for
          *  @param  {Function}  callback    the callback to execute on `event`
          */
-        on: function(event, callback) {
+        on: function (event, callback) {
             var evt = this.listeners[event] || [];
             evt.push(callback);
             this.listeners[event] = evt;
+        },
+
+        /**
+         *  Remove a callback for an event
+         *  @param  {String}    event   the event to listen for
+         *  @param  {Function}  callback    the callback to execute on `event`
+         */
+        off: function (event, callback) {
+            var i = 0, 
+                l;
+            while (l = this.listeners[event][i++]) {
+                if (l == callback) {
+                    this.listeners[event].splice(i-1, 1);
+                }
+            }
         },
 
         /**
@@ -142,7 +157,7 @@ window.geous = new function () {
          *
          *  @param  {String}    event   the event to listen for
          */
-        trigger: function(event) {
+        trigger: function (event) {
 
             var args = [].splice.call(arguments, 1),
                 callback,
@@ -256,7 +271,8 @@ window.geous = new function () {
 
             if (!_persist) {
                 // retrieve from persistence layer?
-                _options.storageAdapter.set('geous', _extend(_options.storageAdapter.get('geous'), _cached))
+                _cached = _extend(_options.storageAdapter.get('geous'), _cached);
+                _options.storageAdapter.set('geous', _cached)
             }
 
             _persist = true;
@@ -352,6 +368,8 @@ window.geous = new function () {
                     throw('geous.Location: unrecognized address format');
                 }
             }
+
+            return this;
         };
 
         /**
@@ -368,15 +386,14 @@ window.geous = new function () {
         Location.prototype.setAddress = function (address) {
 
             var key;
-
-            if (address instanceof Object) {
+            if (address instanceof Array) {
+                this.raw_address = address.join(' ');
+            } else if (address instanceof Object) {
                 for (key in defaults) {
                     if (address[key]) {
                         this[key] = address[key];
                     }
                 }
-            } else if (address instanceof Array) {
-                this.raw_address = address.join(' ');
             } else if (typeof address == 'string') {
                 this.raw_address = address;
             }
@@ -558,7 +575,7 @@ window.geous = new function () {
 
         // convert a successful response into a geous.Location and call the
         // user-specified `success` function:
-        var _successHandler = function(position) {
+        var _successHandler = function (position) {
             var coords = position.coords,
                 location = new geous.Location(coords.latitude, coords.longitude);
 
@@ -582,14 +599,9 @@ window.geous = new function () {
         navigator.geolocation.getCurrentPosition(_successHandler, options.error);
     };
 
-    this.init = function (opts) {
+    this.configure = function (opts) {
 
-        // set up `on` and `trigger` for event handling
-        _extend(this, geous.Events);
-
-        // set up default options
-        this.options = {};
-        _extend(this.options, _defaults, opts);
+        _extend(this.options, opts);
 
         if (this.options.useCache) {
             // set up cache
@@ -599,13 +611,16 @@ window.geous = new function () {
                 storageAdapter : this.options.cacheAdapter
             });
         }
-
-        // prevent init from being called again
-        geous.init = _nop;
     };
+
+    // set up  event handling and defaults
+    _extend(this, this.Events, { options: _defaults });
 };
 
-})(window);
+// expose geous to global namespace
+this.geous = geous;
+
+})();
 
 
 (function (service) {

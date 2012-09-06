@@ -114,22 +114,28 @@ describe('geous', function () {
 				{
 					args: [ new geous.Location(new geous.Location(raw_address)) ],
 					expect: { raw_address: raw_address }
-				}, {
+				}, 
+				{
 					args: [ raw_address ],
 					expect: { raw_address: raw_address }
-				}, {
+				}, 
+				{
 					args: [ lat, lng ],
 					expect: latLngHash 
-				}, {
+				}, 
+				{
 					args: [[ lat, lng ]],
 					expect: latLngHash
-				}, {
+				}, 
+				{
 					args: [[ address, city, state ]],
 					expect: { raw_address: raw_address }
-				}, {
+				}, 
+				{
 					args: [ latLngHash ],
 					expect: latLngHash
-				}, {
+				}, 
+				{
 					args: [ addressHash ],
 					expect: addressHash
 				}
@@ -156,10 +162,12 @@ describe('geous', function () {
 				{
 					args: [ raw_address ],
 					expect: { raw_address: raw_address }
-				}, {
+				}, 
+				{
 					args: [[address, city, state]],
 					expect: { raw_address: raw_address }
-				}, {
+				}, 
+				{
 					args: [ addressHash ],
 					expect: addressHash 
 				}
@@ -178,10 +186,12 @@ describe('geous', function () {
 				{
 					args: [ lat, lng ],
 					expect: latLngHash
-				}, {
+				}, 
+				{
 					args: [[ lat, lng ]],
 					expect: latLngHash
-				}, {
+				}, 
+				{
 					args: [ latLngHash ],
 					expect: latLngHash
 				}
@@ -194,4 +204,75 @@ describe('geous', function () {
 			});
 		});
 	});
+
+	describe('geous.geocode', function () {
+
+		it('delegates to geocoding service', function () {
+			
+			var geocoder = geous.geocoders('mock'),
+				location = new geous.Location(),
+				opts = {
+					response: {}
+				};
+
+			geous.configure({ geocoder: 'mock' });
+			spyOn(geocoder, 'geocode').andCallThrough();
+
+			geous.geocode(location, opts);
+			expect(geocoder.geocode).toHaveBeenCalled();
+		});
+
+	});
+
+	describe('geous.getUserLocation', function () {
+
+		var	lat = 48.3689,
+			lng = -99.9962;
+
+		it ('fires callbacks', function () {
+
+			var result = null;
+
+			var errorSpy = jasmine.createSpy(),
+				successSpy = jasmine.createSpy().andCallFake(function (location) {
+					result = location;
+				});
+
+			var opts = {
+				error: errorSpy,
+				success: successSpy
+			};
+
+			geous.getUserLocation(opts);
+			expect(errorSpy).toHaveBeenCalled();
+
+			navigator.geolocation.nextResult(true, lat, lng);
+			geous.getUserLocation(opts);
+
+			expect(successSpy).toHaveBeenCalled();
+			testHelper.checkFields(result, { lat: lat, lng: lng });
+		});
+
+		it ('can automate geocoding', function () {
+
+			var geocoder = geous.geocoders('mock'),
+				location = new geous.Location(),
+				result = null,
+				opts = {
+					response: {
+						type: 'success'
+					},
+					success: (successSpy = jasmine.createSpy().andCallFake(function (location) {
+						result = location;
+					}))
+				};
+
+			navigator.geolocation.nextResult(true, lat, lng);
+			geous.getUserLocation(opts);
+
+			expect(successSpy).toHaveBeenCalled();
+			expect(result instanceof geous.Location).toBeTruthy();
+		});
+	});
 });
+
