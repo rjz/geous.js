@@ -150,6 +150,23 @@ describe('geous', function () {
 			});
 		});
 
+        it('clones object inputs', function () {
+			var tests = [
+                {
+					args: addressHash,
+					expect: addressHash
+				}, {
+					args: latLngHash,
+					expect: latLngHash
+				}
+            ];
+            
+			tests.forEach(function (test) {
+				var location = new geous.Location(test.args);
+				testHelper.checkFields(location, test.expect);
+			});
+        });
+
 		it('can set its address from a few different formats', function () {
 			
 			var tests = [

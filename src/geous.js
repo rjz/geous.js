@@ -1,15 +1,11 @@
 /*
-Predicated on the assumptions that both users and geocoding services know what they're doing. 
-
-Release notes:
-
-If you are using a previous version of geous, this release **will** break it
-
-- HTML5's location API has replaced `geo_location.js` for obtaining client locations
-- The newly decoupled service providers will no longer be loaded automatically
-- geous.on` and `geous.trigger` replace the `addEventListener` and `triggerEvent` methods, respectively
-
-*/
+ *  Geous.js: Javascript geolocation made easy.
+ *
+ *	rjz.github.com/geous.js
+ *
+ *	@author	RJ Zaworski (@rjzaworski)
+ *	@license JSON
+ */
 ;
 (function (undefined) {
 
@@ -19,7 +15,7 @@ var geous = new function () {
 
     var /**
          *  Default options. Any key/value described here may be overwritten by 
-         *  passing an `options` hash to `geous.init()`
+         *  overwriting parameters in `geous.options`
          *
          *  @private
          */
@@ -33,8 +29,8 @@ var geous = new function () {
             useCache: false,
 
             /**
-             *  localStorage adapter. Override this as needed to provide persistence
-             *  with databases, socket connections, etc.
+             *  localStorage adapter. Override this as needed to provide 
+             *  persistence with databases, socket connections, etc.
              */
             cacheAdapter: {
 
@@ -271,7 +267,7 @@ var geous = new function () {
 
             if (!_persist) {
                 // retrieve from persistence layer?
-                _cached = _extend(_options.storageAdapter.get('geous'), _cached);
+                _cached = _extend({}, _options.storageAdapter.get('geous'), _cached);
                 _options.storageAdapter.set('geous', _cached)
             }
 
@@ -357,6 +353,7 @@ var geous = new function () {
                         });
                     }
                 } else if (location instanceof Object) {
+                    location = _extend({}, location);
                     if (location.lat && location.lng) {
                         // guess: loc follows {lat: ..., lng: ... }
                         this.setCoordinates(location);
