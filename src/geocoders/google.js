@@ -2,10 +2,6 @@
 
 	'use strict';
 
-	if (typeof(google) == 'undefined') {
-		throw('Please provide the Google Maps API before attempting to geocode with Google');
-	}
-
 	var _mappings = {
 		'street_number'               : '_streetno',
 		'route'                       : '_route',
@@ -86,6 +82,10 @@
 		var coords,
 			gc = new google.maps.Geocoder(),
 			request;
+
+        if (typeof(google) == 'undefined') {
+            throw('Please provide the Google Maps API before attempting to geocode with Google');
+        }
 
 		if (opts.reverse) {
 			// lat, lng
