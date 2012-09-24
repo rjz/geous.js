@@ -69,7 +69,7 @@ $('.demo[data-demo="single"].geousable').each(function () {
     $demo.geousable('geocode', {
       error: errorHandler,
       success: function (location) {
-	$demo.geousable('setLocation', location);
+        $demo.geousable('setLocation', location);
       }
     });
   });
@@ -281,15 +281,15 @@ $('.demo[data-demo="auto"].geousable').each(function () {
     geous.getUserLocation({
       error: errorHandler,
       success: function (location) {
-	setStatus('looking up location');
+        setStatus('looking up location');
 	
-	geous.geocode (location, { 
-	  reverse: true,
-	  success: function (location) {
-	    setStatus('Success!');
-	    $demo.geousable('setLocation', location);
-	  }
-	});
+        geous.geocode (location, { 
+          reverse: true,
+          success: function (location) {
+            setStatus('Success!');
+            $demo.geousable('setLocation', location);
+          }
+        });
       }
     });
   });
