@@ -6,12 +6,11 @@
  *	Provides jQuery interface for Geous.js
  *	github.com/rjz/geous.js
  *
- *	@author	RJ Zaworski <rj@rjzaworski.com>
- *	@license	JSON
+ *	@author	RJ Zaworski (@rjzaworski)
+ *	@license JSON
  */
-
 ;
-(function($) {
+(function ($) {
 
 	'use strict';
 
