@@ -3,6 +3,11 @@ Geous.js
 
 Javascript geolocation and geocoding made easy.
 
+* [Overview](#overview)
+* [Using with jQuery](#geous--jquery)
+* [Geocoders](#geocoders)
+* [License](#license)
+
 Overview
 --------
 
