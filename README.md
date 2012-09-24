@@ -118,37 +118,39 @@ Options include:
     <td>String</td>
     <td>
       The pattern used to map field names to CSS-selectors.
-      **Default: `'.{%}'`**
+      <br /><strong>Default: <code>'.{%}'</code></strong>
     </td>
   </tr>
   <tr>
     <td>errorHandler</td>
     <td>Function</td>
-    <td>General error handler to be passed as the default `error` parameter to geous requests</td>
+    <td>General error handler to be passed as the default <code>error</code> parameter to geous requests</td>
   </tr>
   <tr>
     <td>map</td>
     <td>Object</td>
-    <td>A map of the fields of a `geous.Location` object (address, city, state, etc.) to a corresponding CSS selector. If `null` is supplied, an appropriate selector will be constructed from the field's name and the `defaultMapPattern` parameter</td>
+    <td>A map of the fields of a <code>geous.Location</code> object (address, city, state, etc.) to a corresponding CSS selector. If <code>null</code> is supplied, an appropriate selector will be constructed from the field's name and the <code>defaultMapPattern</code> parameter</td>
   </tr>
   <tr>
     <td>onFieldError</td>
     <td>Function</td>
     <td>
-			Callback to call when a lookup fails to populate a field using `setLocation`. Callbacks specified using `onFieldError` should accept a jQuery selector containing the field in question (`$field`) as their only parameter.
+			Callback to call when a lookup fails to populate a field using <code>setLocation</code>. Callbacks specified using <code>onFieldError</code> should accept a jQuery selector containing the field in question (<code>$field</code>) as their only parameter.
     </td>
   </tr>
   <tr>
     <td>onFieldSuccess</td>
     <td>Function</td>
     <td>
-			Callback to call when a lookup successfully populates a field using `setLocation`. Callbacks specified using `onFieldError` should accept a jQuery selector containing the field in question (`$field`) as their only parameter.
+			Callback to call when a lookup successfully populates a field using <code>setLocation</code>. Callbacks specified using <code>onFieldError</code> should accept a jQuery selector containing the field in question (<code>$field</code>) as their only parameter.
     </td>
   </tr>
   <tr>
     <td>overwrite</td>
     <td>Boolean</td>
-    <td>Allow `setLocation` to overwrite fields with existing content? **default: `false`**</td>
+    <td>Allow <code>setLocation</code> to overwrite fields with existing content? 
+      <br /><strong>default: <code>false</code></strong>
+    </td>
   </tr>
 </table>
 
