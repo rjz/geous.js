@@ -1,4 +1,9 @@
-;(function(geous){
+/**
+ *  Geous/Google Maps integration
+ *
+ *  This plugin remains very much under development. Use at your own risk!
+ */
+;(function (geous) {
 
 	'use strict';
 
