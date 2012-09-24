@@ -3,9 +3,7 @@ module.exports = function(grunt) {
     concat: {
       'geous.js': [
         'src/geous.js',
-        'src/geocoders/google.js',
-        'plugins/geous.maps.js',
-        'plugins/jquery.geousable.js'
+        'src/geocoders/google.js'
       ]
     }
   });
