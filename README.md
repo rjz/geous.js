@@ -6,7 +6,7 @@ Javascript geolocation and geocoding made easy.
 Overview
 --------
 
-Geous provides several useful tools for simplifying location-based tasks and a common format for managing location-based data.
+Geous provides a common format for managing location-based data and handy utilities for performing location-related tasks.
 
 ###geous.Location
 
@@ -91,6 +91,119 @@ Adding `geocode: true` to the options hash will instruct geous to attempt to geo
             console.log('Geocoded location:', location.toAddress());
         }
     });
+
+Geous + jQuery
+--------------
+
+Geous includes a jQuery plugin (jquery.geousable) for translating between HTML inputs and `geous.Location` objects.
+
+### configuration
+
+Pass options to `geousable` when first initializing it on a selector. For instance, to allow the plugin to overwrite existing content in related fields and elements, set the `overwrite` option:
+
+    $('form').geousable({
+      overwrite: true
+    });
+
+Options include:
+
+<table>
+  <tr>
+    <th>Option</th>
+    <th>Type</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td>defaultMapPattern</td>
+    <td>String</td>
+    <td>
+      The pattern used to map field names to CSS-selectors.
+      **Default: `'.{%}'`**
+    </td>
+  </tr>
+  <tr>
+    <td>errorHandler</td>
+    <td>Function</td>
+    <td>General error handler to be passed as the default `error` parameter to geous requests</td>
+  </tr>
+  <tr>
+    <td>map</td>
+    <td>Object</td>
+    <td>A map of the fields of a `geous.Location` object (address, city, state, etc.) to a corresponding CSS selector. If `null` is supplied, an appropriate selector will be constructed from the field's name and the `defaultMapPattern` parameter</td>
+  </tr>
+  <tr>
+    <td>onFieldError</td>
+    <td>Function</td>
+    <td>
+			Callback to call when a lookup fails to populate a field using `setLocation`. Callbacks specified using `onFieldError` should accept a jQuery selector containing the field in question (`$field`) as their only parameter.
+    </td>
+  </tr>
+  <tr>
+    <td>onFieldSuccess</td>
+    <td>Function</td>
+    <td>
+			Callback to call when a lookup successfully populates a field using `setLocation`. Callbacks specified using `onFieldError` should accept a jQuery selector containing the field in question (`$field`) as their only parameter.
+    </td>
+  </tr>
+  <tr>
+    <td>overwrite</td>
+    <td>Boolean</td>
+    <td>Allow `setLocation` to overwrite fields with existing content? **default: `false`**</td>
+  </tr>
+</table>
+
+### getLocation()
+
+With `geous.js` and `jquery.geousable.js` included, location fields may be retrieved directly from an HTML form:
+
+    <!-- form -->
+    <form>
+      <input type="text" class="address" />
+      <input type="text" class="city" />
+      <input type="text" class="state" />
+      <input type="submit" />
+    </form>
+
+    <script>
+      $('form').submit(function (e) {
+        e.preventDefault();
+        var location = $(this).geousable('getLocation');
+        console.log(location);
+      });
+    </script>
+
+### setLocation()
+
+Similarly, a `Location` may be assigned directly to the form:
+
+    <script>
+      var location = new geous.Location({
+        address: '123 ABC st',
+        city: 'Akron',
+        state: 'Ohio'
+      });
+      $('form').geousable('setLocation', location);
+    </script>
+
+### geocode()
+
+Finally, the `Location` described by a form may be completed via a geocoding request:
+
+    <script>
+      $('form').geousable('geocode', {
+        success: function (location) {
+          console.log(location);
+        }
+      });
+    </script>
+
+Geocoders
+---------
+
+Geous ships with support for Google's Geocoding API, but other geocoding services may be used as well. To use an alternate geocoder, wrap the geocoder in a module that exposes a `geocode()` method (see `src/geocoders`). If you author a wrapper for another service, please don't hesitate to contribute!
+
+If you choose to rely on the Google Geocoding API, please be sure that your application conforms to its terms of service.
+
 
 License
 ----------------
