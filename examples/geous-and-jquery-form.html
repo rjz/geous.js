@@ -20,8 +20,6 @@
 		var errorHandler = function(error) { 
 			alert('Error! ("' + error + '")'); 
 		};
-
-		geous.init();
 	</script>
 </head>
 <body>
@@ -45,7 +43,7 @@
 			<div class="control-group">
 				<label class="control-label"><strong>Your Location</strong></label>
 				<div class="controls">
-					<input type="text" class="location" placeholder="Where are you?" value="Mt. Rushmore" />
+					<input type="text" class="raw_address" placeholder="Where are you?" value="Mt. Rushmore" />
 				</div>
 				<div class="form-actions">
 					<input type="submit" class="btn btn-large btn-primary" value="Look it up" />
@@ -62,14 +60,16 @@
 $('.demo[data-demo="single"].geousable').each(function () {
 
   var $demo = $(this);
+  
+  $demo.geousable({ overwrite: true });
 
   $('form', $demo).submit(function(e) {
-
     e.preventDefault();
-
-    geous.geocode(new geous.Location($('.location', $demo).val()), {
+    
+    $demo.geousable('geocode', {
+      error: errorHandler,
       success: function (location) {
-        $demo.geousable('setLocation', location);
+	$demo.geousable('setLocation', location);
       }
     });
   });
@@ -114,19 +114,19 @@ $('.demo[data-demo="single"].geousable').each(function () {
 // DEMO: use geous to get the current location
 $('.demo[data-demo="userlocation"].geousable').each(function () {
 
-	var $demo = $(this);
+  var $demo = $(this);
 
-	// retrieve the current user's location:
-	$('form', $demo).submit(function (e) {
-		e.preventDefault();
-		geous.getUserLocation({
-			error: errorHandler,
-			success: function (location) {
-				$demo.geousable('setLocation', location);
-			}
-		});
-	});
-});	
+  $('form', $demo).submit(function (e) {
+    e.preventDefault();
+    
+    geous.getUserLocation({
+      error: errorHandler,
+      success: function (location) {
+        $demo.geousable('setLocation', location);
+      }
+    });
+  });
+});
 </script>
 
 
@@ -192,12 +192,13 @@ $('.demo[data-demo="multi"].geousable').each(function () {
   
   var $demo = $(this);
 
+  $demo.geousable({ overwrite: true });
+  
   $('form', $demo).submit(function(e) {
-   
     e.preventDefault();
-    $('.lat, .lng').val('');
-
+    
     $demo.geousable('geocode', {
+      error: errorHandler,
       success: function (location) {
         $demo.geousable('setLocation', location);
       }
@@ -267,30 +268,31 @@ $('.demo[data-demo="multi"].geousable').each(function () {
 // and populate a form with the results:
 $('.demo[data-demo="auto"].geousable').each(function () {
 
-	var $demo = $(this),
-		setStatus = function (status) {
-			$('.status', $demo).html(status);
-		};
+  var $demo = $(this),
+      setStatus = function (status) {
+        $('.status', $demo).html(status);
+      };
 
-	// retrieve the current user's location:
-	$('form', $demo).submit(function (e) {
-		e.preventDefault();
-		setStatus('getting location');
-		geous.getUserLocation({
-			error: errorHandler,
-			success: function (location) {
-				setStatus('looking up location');
-				$demo.geousable('setLocation', location);
-				geous.geocode (location, { 
-					reverse: true,
-					success: function (location) {
-						setStatus('Success!');
-						$demo.geousable('setLocation', location);
-					}
-				});
-			}
-		});
+  // retrieve the current user's location:
+  $('form', $demo).submit(function (e) {
+    e.preventDefault();
+    setStatus('getting location');
+    
+    geous.getUserLocation({
+      error: errorHandler,
+      success: function (location) {
+	setStatus('looking up location');
+	
+	geous.geocode (location, { 
+	  reverse: true,
+	  success: function (location) {
+	    setStatus('Success!');
+	    $demo.geousable('setLocation', location);
+	  }
 	});
+      }
+    });
+  });
 });
 </script>
 
