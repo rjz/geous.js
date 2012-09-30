@@ -11,6 +11,26 @@ Javascript geolocation and geocoding made easy.
 * [Geocoders](#geocoders)
 * [License](#license)
 
+Getting started
+---------------
+
+Clone the geous repository to your application's script directory:
+
+    $ cd /my/project/js/
+    $ git clone https://github.com/rjz/geous.js.git
+
+Include `geous.js`:
+
+    <!-- include geous -->
+    <script src="geous/geous.js"></script>
+
+If you're planning to use geous to assist in geocoding tasks, you will also need to include the google maps API:
+
+    <!-- include google maps for use w/ maps geocoder-->
+    <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=true"></script>
+
+And that's it! You can now begin taking advantage of geous in your javascript application.
+
 Overview
 --------
 
@@ -107,7 +127,15 @@ Geous includes a jQuery plugin (jquery.geousable) for translating between HTML i
 
 ### configuration
 
-Pass options to `geousable` when first initializing it on a selector. For instance, to allow the plugin to overwrite existing content in related fields and elements, set the `overwrite` option:
+Get started by including geous, jquery, and the jquery.geousable plugin:
+
+    <!-- include jQuery from Google CDN -->
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+
+    <!-- include jquery.geousable plugin from plugins/ -->
+    <script src="geous/plugins/jquery/jquery.geousable.js"></script>
+
+jQuery selectors will now have access to the `geousable` plugin. Pass configuration settings when first initializing it on a selector. For instance, to allow the plugin to overwrite existing content in related fields and elements, set the `overwrite` option:
 
     $('form').geousable({
       overwrite: true
@@ -213,7 +241,6 @@ Geocoders
 Geous ships with support for Google's Geocoding API, but other geocoding services may be used as well. To use an alternate geocoder, wrap the geocoder in a module that exposes a `geocode()` method (see `src/geocoders`). If you author a wrapper for another service, please don't hesitate to contribute!
 
 If you choose to rely on the Google Geocoding API, please be sure that your application conforms to its terms of service.
-
 
 License
 ----------------
